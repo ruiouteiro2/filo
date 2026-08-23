@@ -71,6 +71,27 @@
                 android:value="true" />
         </service>
 
+        <!--
+             Reads what is playing from the phone's own media session. Notification access is
+             only the key: MediaSessionManager refuses to hand over sessions without an
+             enabled listener. This service never implements onNotificationPosted, and
+             disabled_filter_types tells the OS not to deliver those callbacks at all, so it
+             structurally cannot read messages.
+        -->
+        <service
+            android:name=".nowplaying.NowPlayingListenerService"
+            android:exported="false"
+            android:label="@string/now_playing_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:stopWithTask="false">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.notification.disabled_filter_types"
+                android:value="conversations|alerting|silent|ongoing" />
+        </service>
+
         <service
             android:name=".location.LiveLocationService"
             android:exported="false"

@@ -18,6 +18,7 @@ import com.filo.app.data.model.Countdown
 import com.filo.app.data.model.Member
 import com.filo.app.data.model.PairResult
 import com.filo.app.data.net.FiloSupabase
+import com.filo.app.nowplaying.NotificationAccess
 import com.filo.app.spotify.SpotifyApi
 import com.filo.app.spotify.SpotifyAuth
 import com.filo.app.data.weather.Weather
@@ -337,6 +338,25 @@ class FiloRepository(private val context: Context) {
         set("daily_photo_at", Instant.now().toString())
     }
 
+    /**
+     * Publishes what the phone itself reports is playing, read from the media session rather
+     * than from Spotify's API. Same columns, so nothing downstream cares which source won.
+     */
+    suspend fun publishLocalNowPlaying(
+        trackId: String?,
+        title: String,
+        artist: String,
+        artUrl: String?,
+        isPlaying: Boolean,
+    ): Boolean = updateMe {
+        set("spotify_track_id", trackId ?: "")
+        set("spotify_track_name", title)
+        set("spotify_artist", artist)
+        set("spotify_art_url", artUrl ?: "")
+        set("spotify_is_playing", isPlaying)
+        set("spotify_updated_at", Instant.now().toString())
+    }
+
     /** Unlinking must also retract what was already shared. */
     suspend fun clearNowPlaying(): Boolean = updateMe {
         set("spotify_track_id", "")
@@ -548,8 +568,11 @@ class FiloRepository(private val context: Context) {
         // must never be the thing the rest of the sync is queued behind.
         val refreshed = refresh()
 
-        // Cheap and independent, so a Spotify hiccup never holds up the rest of the sync.
-        runCatching { publishNowPlaying() }
+        // One writer only. When the phone is reporting what is playing, the Web API poll
+        // would just overwrite fresher data with something up to 30 minutes old.
+        if (!NotificationAccess.isGranted(context)) {
+            runCatching { publishNowPlaying() }
+        }
 
         if (readLocation && locationReader.hasPermission()) {
             locationReader.currentLocation()?.let { (lat, lon) ->

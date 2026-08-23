@@ -244,4 +244,11 @@
     <string name="countdowns_add_translation">Aggiungi un nome in inglese</string>
     <string name="countdowns_translation_hint">Lascia vuoto e viene usato lo stesso nome in tutte e due le lingue.</string>
     <string name="countdowns_primary_hint">Quello mostrato nella schermata principale e nel widget.</string>
+    <string name="now_playing_listener_label">In riproduzione</string>
+    <string name="now_playing_settings">Cosa stai ascoltando</string>
+    <string name="now_playing_body">Filo può leggere cosa sta suonando su questo telefono e mostrarglielo, così può aprire lo stesso brano. Legge solo il lettore musicale, mai le tue notifiche.</string>
+    <string name="now_playing_enable">Fai vedere a Filo cosa stai ascoltando</string>
+    <string name="now_playing_on">Stai condividendo cosa ascolti</string>
+    <string name="now_playing_restricted">Se l\'interruttore è grigio, Android lo blocca perché Filo è stato installato da un file. Nella schermata info app apri il menu a tre puntini e scegli "Consenti impostazioni con limitazioni", poi torna qui.</string>
+    <string name="now_playing_app_info">Apri info app</string>
 </resources>

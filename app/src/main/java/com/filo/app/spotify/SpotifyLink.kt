@@ -57,6 +57,26 @@ object SpotifyLink {
         return launch(context, webIntent)
     }
 
+    /**
+     * When the phone gave us a title and artist but no id, open a search for it. Undocumented
+     * but long-standing, and a title plus artist lands on the right track in practice.
+     */
+    fun openSearch(context: Context, title: String, artist: String): Boolean {
+        val query = listOf(title, artist).filter { it.isNotBlank() }.joinToString(" ")
+        if (query.isBlank()) return false
+
+        val appIntent = Intent(Intent.ACTION_VIEW, Uri.parse("spotify:search:" + Uri.encode(query)))
+            .setPackage(PACKAGE)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (launch(context, appIntent)) return true
+
+        val webIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://open.spotify.com/search/" + Uri.encode(query)),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return launch(context, webIntent)
+    }
+
     private fun launch(context: Context, intent: Intent): Boolean = try {
         context.startActivity(intent)
         true

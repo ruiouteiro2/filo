@@ -244,4 +244,11 @@
     <string name="countdowns_add_translation">Add an Italian name</string>
     <string name="countdowns_translation_hint">Leave this empty and the same name is used in both languages.</string>
     <string name="countdowns_primary_hint">The one shown on the home screen and the widget.</string>
+    <string name="now_playing_listener_label">Now playing</string>
+    <string name="now_playing_settings">What you are listening to</string>
+    <string name="now_playing_body">Filo can read what is playing on this phone and show it to them, so they can open the same track. It reads only the media player, never your notifications.</string>
+    <string name="now_playing_enable">Let Filo see what is playing</string>
+    <string name="now_playing_on">Sharing what you play</string>
+    <string name="now_playing_restricted">If the switch is greyed out, Android is blocking it because Filo was installed from a file. On the app info screen, open the three dot menu and choose "Allow restricted settings", then come back.</string>
+    <string name="now_playing_app_info">Open app info</string>
 </resources>

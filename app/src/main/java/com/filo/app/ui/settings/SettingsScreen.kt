@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -38,7 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.filo.app.BuildConfig
 import com.filo.app.R
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.unit.sp
 import com.filo.app.core.prefs.PairingState
+import com.filo.app.nowplaying.NotificationAccess
 import com.filo.app.core.time.DayMath
 import com.filo.app.core.time.PgTime
 import com.filo.app.data.model.CoupleSnapshot
@@ -152,6 +157,8 @@ fun SettingsScreen(
                 },
             )
         }
+
+        NowPlayingCard()
 
         if (spotifyConfigured) {
             FiloCard {
@@ -390,3 +397,65 @@ private fun TimePickerDialog(
 
 @Suppress("unused")
 private val sdkGuard = Build.VERSION.SDK_INT
+
+/**
+ * Reading what is playing from the phone itself.
+ *
+ * This is the route that needs no Spotify account, no developer app and nobody's Premium
+ * subscription. The awkward part is Android 13's restricted settings: a sideloaded app has
+ * this toggle greyed out until the user unblocks it from the app info screen, and without
+ * saying so the app just looks broken.
+ */
+@Composable
+private fun NowPlayingCard() {
+    val context = LocalContext.current
+    var granted by remember { mutableStateOf(NotificationAccess.isGranted(context)) }
+
+    // The grant happens on a settings screen, so re-read it every time we come back.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                granted = NotificationAccess.isGranted(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    FiloCard {
+        SectionLabel(stringResource(R.string.now_playing_settings))
+        Spacer(Modifier.height(8.dp))
+        Timestamp(stringResource(R.string.now_playing_body))
+        Spacer(Modifier.height(12.dp))
+
+        if (granted) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("●", fontSize = 10.sp, color = Crimson)
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.now_playing_on), style = FiloType.Body, color = Bone)
+            }
+            Spacer(Modifier.height(10.dp))
+            FiloSecondaryButton(
+                text = stringResource(R.string.settings_permissions),
+                onClick = { NotificationAccess.openSettings(context) },
+            )
+        } else {
+            FiloButton(
+                text = stringResource(R.string.now_playing_enable),
+                onClick = { NotificationAccess.openSettings(context) },
+            )
+            if (NotificationAccess.needsRestrictedSettingsUnlock) {
+                Spacer(Modifier.height(12.dp))
+                Timestamp(stringResource(R.string.now_playing_restricted))
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.now_playing_app_info),
+                    style = FiloType.Label,
+                    color = Blood,
+                    modifier = Modifier.clickable { NotificationAccess.openAppInfo(context) },
+                )
+            }
+        }
+    }
+}

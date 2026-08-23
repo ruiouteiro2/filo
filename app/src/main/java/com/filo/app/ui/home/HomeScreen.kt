@@ -65,7 +65,6 @@ import com.filo.app.ui.components.FiloButton
 import com.filo.app.ui.components.FiloCard
 import com.filo.app.ui.components.FiloSecondaryButton
 import com.filo.app.ui.components.FiloTextField
-import com.filo.app.spotify.SpotifyAuth
 import com.filo.app.spotify.SpotifyLink
 import com.filo.app.ui.components.MapPreview
 import com.filo.app.ui.components.OrbBackground
@@ -636,13 +635,23 @@ private fun HomeCheckCircle() {
 @Composable
 private fun NowPlayingCard(partner: Member?, me: Member?) {
     val context = LocalContext.current
-    if (!SpotifyAuth.isConfigured) return
+    // Shown whenever there is something to show. Which source filled it in - the phone's own
+    // media session or the Spotify API - is not the card's business.
     if (partner == null || !partner.hasNowPlaying) return
 
     FiloCard(
         onClick = {
-            partner.spotifyTrackId?.takeIf { it.isNotBlank() }?.let { id ->
+            val id = partner.spotifyTrackId?.takeIf { it.isNotBlank() }
+            if (id != null) {
                 SpotifyLink.openTrack(context, id)
+            } else {
+                // No exact id from the media session, so search for it instead. One extra
+                // tap, and it still lands on the track.
+                SpotifyLink.openSearch(
+                    context,
+                    partner.spotifyTrackName.orEmpty(),
+                    partner.spotifyArtist.orEmpty(),
+                )
             }
         },
     ) {
