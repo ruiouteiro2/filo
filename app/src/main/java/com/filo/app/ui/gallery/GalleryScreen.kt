@@ -78,7 +78,7 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
                 SectionLabel("Countdown numeral")
                 Spacer(Modifier.height(8.dp))
                 Text("42", style = FiloType.Numeral, color = Blood)
-                Text("days until Ascoli", style = FiloType.Body, color = Bone)
+                Text("days until the next visit", style = FiloType.Body, color = Bone)
                 Timestamp("14 September 2026")
             }
         }

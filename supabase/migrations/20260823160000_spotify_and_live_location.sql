@@ -13,8 +13,8 @@ alter table members
   add column if not exists spotify_updated_at  timestamptz;
 
 -- Always-on tracking writes far more often than the old foreground-only sync, so the
--- accuracy of each fix is worth keeping: it is the difference between "in Ascoli" and
--- "on this street".
+-- accuracy of each fix is worth keeping: it is the difference between naming a town and
+-- naming a street.
 alter table members
   add column if not exists location_accuracy_m double precision,
   add column if not exists location_is_live    boolean default false;

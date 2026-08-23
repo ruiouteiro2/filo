@@ -3,7 +3,7 @@
 A private Android app for two people in a long distance relationship. Never published to the
 Play Store; it is sideloaded onto two phones.
 
-Setúbal ↔ Ascoli Piceno. English and Italian, chosen per person.
+English and Italian, chosen per person rather than by device locale.
 
 ## What it does
 
