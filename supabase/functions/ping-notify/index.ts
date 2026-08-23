@@ -117,7 +117,7 @@ Deno.serve(async (request) => {
 
     const { data: members } = await supabase
       .from("members")
-      .select("id, display_name, locale, fcm_token")
+      .select("id, display_name, locale, fcm_token, partner_nickname")
       .eq("couple_id", ping.couple_id);
 
     const sender = members?.find((m) => m.id === ping.from_member);
@@ -152,7 +152,9 @@ Deno.serve(async (request) => {
 
     // Their own words win over the canned line. The sender's name becomes the title, so a
     // note reads like a message from a person rather than an announcement from an app.
-    const senderName = sender?.display_name ?? "Filo";
+    // What the recipient calls them wins: the notification should read the way they think
+    // of the person, not the way that person filled in a form.
+    const senderName = recipient.partner_nickname?.trim() || sender?.display_name || "Filo";
     const custom = typeof ping.message === "string" ? ping.message.trim() : "";
     const message = {
       message: {

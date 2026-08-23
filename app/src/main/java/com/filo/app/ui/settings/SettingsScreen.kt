@@ -73,6 +73,7 @@ fun SettingsScreen(
     pairing: PairingState,
     onBack: () -> Unit,
     onSetName: (String) -> Unit,
+    onSetPartnerNickname: (String) -> Unit,
     onSetLocale: (String) -> Unit,
     clock24h: Boolean,
     onSetClock24h: (Boolean) -> Unit,
@@ -94,6 +95,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val me = snapshot.me
     var name by remember(me?.displayName) { mutableStateOf(me?.displayName.orEmpty()) }
+    var nickname by remember(me?.partnerNickname) { mutableStateOf(me?.partnerNickname.orEmpty()) }
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -129,6 +131,24 @@ fun SettingsScreen(
                 text = stringResource(R.string.save),
                 enabled = name.isNotBlank() && name != me?.displayName,
                 onClick = { onSetName(name.trim()) },
+            )
+        }
+
+        FiloCard {
+            SectionLabel(stringResource(R.string.settings_nickname))
+            Spacer(Modifier.height(6.dp))
+            Timestamp(stringResource(R.string.settings_nickname_hint))
+            Spacer(Modifier.height(10.dp))
+            FiloTextField(
+                value = nickname,
+                onValueChange = { nickname = it.take(30) },
+                label = stringResource(R.string.settings_nickname),
+            )
+            Spacer(Modifier.height(10.dp))
+            FiloButton(
+                text = stringResource(R.string.save),
+                enabled = nickname.trim() != (me?.partnerNickname ?: ""),
+                onClick = { onSetPartnerNickname(nickname.trim()) },
             )
         }
 

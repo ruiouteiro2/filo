@@ -229,7 +229,7 @@
     <string name="bucket_progress">Progress</string>
     <string name="bucket_progress_count">%1$d of %2$d</string>
     <string name="mood_emoji_hint">Emoji</string>
-    <string name="mood_emoji_any">Any emoji works. Use the emoji key on your keyboard.</string>
+    <string name="mood_emoji_any">Tap to pick how you feel.</string>
     <string name="map_open">Tap to open in Maps</string>
     <string name="map_attribution">© OpenStreetMap, CARTO</string>
     <string name="bucket_see_more">See all, %1$d more</string>
@@ -287,4 +287,9 @@
     <string name="weather_feels_like">Feels like %1$s\u00B0</string>
     <string name="weather_humidity">%1$d%% humidity</string>
     <string name="weather_wind">Wind %1$d km/h</string>
+    <string name="photo_waiting_for">Nothing from %1$s yet</string>
+    <string name="mood_pick_emoji">How are you feeling</string>
+    <string name="mood_clear_emoji">Clear</string>
+    <string name="settings_nickname">What you call them</string>
+    <string name="settings_nickname_hint">Shown on this phone and in the notifications they send you. Only you see it.</string>
 </resources>

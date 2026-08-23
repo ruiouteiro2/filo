@@ -229,7 +229,7 @@
     <string name="bucket_progress">Avanzamento</string>
     <string name="bucket_progress_count">%1$d su %2$d</string>
     <string name="mood_emoji_hint">Emoji</string>
-    <string name="mood_emoji_any">Va bene qualsiasi emoji. Usa il tasto emoji della tastiera.</string>
+    <string name="mood_emoji_any">Tocca per scegliere come ti senti.</string>
     <string name="map_open">Tocca per aprire in Mappe</string>
     <string name="map_attribution">© OpenStreetMap, CARTO</string>
     <string name="bucket_see_more">Vedi tutto, altri %1$d</string>
@@ -287,4 +287,9 @@
     <string name="weather_feels_like">Percepiti %1$s\u00B0</string>
     <string name="weather_humidity">Umidit\u00E0 %1$d%%</string>
     <string name="weather_wind">Vento %1$d km/h</string>
+    <string name="photo_waiting_for">Ancora niente da %1$s</string>
+    <string name="mood_pick_emoji">Come ti senti</string>
+    <string name="mood_clear_emoji">Togli</string>
+    <string name="settings_nickname">Come la chiami</string>
+    <string name="settings_nickname_hint">Appare su questo telefono e nelle notifiche che ti manda. Lo vedi solo tu.</string>
 </resources>

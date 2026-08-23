@@ -306,6 +306,10 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
     fun setNote(text: String) = viewModelScope.launch { repo.setNote(text) }
     fun setSleepWindow(start: LocalTime, end: LocalTime) = viewModelScope.launch { repo.setSleepWindow(start, end) }
     fun setDisplayName(name: String) = viewModelScope.launch { repo.setDisplayName(name) }
+    fun setPartnerNickname(name: String) = viewModelScope.launch {
+        repo.setPartnerNickname(name)
+        pushToWidgets()
+    }
     fun setSinceDate(date: LocalDate) = viewModelScope.launch { repo.setSinceDate(date) }
     fun sendPing(message: String? = null) = viewModelScope.launch { repo.sendPing(message) }
     fun uploadAvatar(uri: android.net.Uri) = viewModelScope.launch { repo.uploadAvatar(uri) }

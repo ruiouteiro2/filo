@@ -15,6 +15,8 @@ data class Member(
     val id: String,
     @SerialName("couple_id") val coupleId: String? = null,
     @SerialName("display_name") val displayName: String,
+    /** What THIS member calls their partner. Their choice, on their own row. */
+    @SerialName("partner_nickname") val partnerNickname: String? = null,
     val locale: String = "en",
     val timezone: String = "UTC",
     @SerialName("photo_url") val photoUrl: String? = null,

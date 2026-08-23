@@ -188,6 +188,7 @@ private fun FiloRoot() {
                     pairing = pairing,
                     onBack = { navController.popBackStack() },
                     onSetName = vm::setDisplayName,
+                    onSetPartnerNickname = vm::setPartnerNickname,
                     onSetLocale = vm::setLocale,
                     clock24h = clock24h,
                     onSetClock24h = vm::setClock24h,

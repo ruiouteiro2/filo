@@ -193,7 +193,14 @@ class FiloRepository(private val context: Context) {
         runCatching {
             val members = client.from("members").select().decodeList<Member>()
             val me = members.firstOrNull { it.id == uid }
-            val partner = members.firstOrNull { it.id != uid }
+            // The nickname is applied here and nowhere else: every screen, every widget and
+            // every string that shows their name gets it for free, and no call site has to
+            // remember to ask. The real display_name stays untouched in the database.
+            val partner = members.firstOrNull { it.id != uid }?.let { them ->
+                me?.partnerNickname?.trim()?.takeIf { it.isNotEmpty() }
+                    ?.let { nick -> them.copy(displayName = nick) }
+                    ?: them
+            }
             val couple = client.from("couples").select().decodeList<Couple>().firstOrNull()
             val countdowns = client.from("countdowns").select {
                 order("date", Order.ASCENDING)
@@ -439,6 +446,14 @@ class FiloRepository(private val context: Context) {
     }
 
     suspend fun setAvatar(url: String): Boolean = updateMe { set("photo_url", url) }
+
+    /** Blank clears it and their own name comes back. */
+    suspend fun setPartnerNickname(name: String): Boolean {
+        val trimmed = name.trim().take(30)
+        val ok = updateMe { set("partner_nickname", trimmed.ifEmpty { null }) }
+        if (ok) refresh()
+        return ok
+    }
 
     // ------------------------------------------------------------- the couple
 

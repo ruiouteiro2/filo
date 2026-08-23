@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -148,7 +149,35 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) { onRefresh() }
 
+    // Pulling down refreshes everything, because that is what pulling down means on a phone.
+    var refreshing by remember { mutableStateOf(false) }
+    val pullState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+
     OrbBackground(modifier = modifier.fillMaxSize().background(Ink)) {
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = refreshing,
+            state = pullState,
+            onRefresh = {
+                refreshing = true
+                onRefresh()
+                // The refresh itself is fire and forget; hold the spinner just long enough
+                // to read as an answer rather than a flinch.
+                scope.launch {
+                    kotlinx.coroutines.delay(900)
+                    refreshing = false
+                }
+            },
+            indicator = {
+                androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = refreshing,
+                    containerColor = com.filo.app.ui.theme.SurfaceHigh,
+                    color = Crimson,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            },
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -237,6 +266,7 @@ fun HomeScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+        }
         }
     }
 }
@@ -442,6 +472,7 @@ private fun ComposerDialog(
     var emojiDraft by remember { mutableStateOf(me?.moodEmoji.orEmpty()) }
 
     val composerContext = androidx.compose.ui.platform.LocalContext.current
+    var pickingEmoji by remember { mutableStateOf(false) }
     var recents by remember { mutableStateOf(emptyList<String>()) }
     LaunchedEffect(Unit) { recents = com.filo.app.core.prefs.RecentEmojis.load(composerContext) }
 
@@ -484,12 +515,21 @@ private fun ComposerDialog(
 
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.width(100.dp)) {
-                    FiloTextField(
-                        value = emojiDraft,
-                        onValueChange = { emojiDraft = it.take(8) },
-                        label = stringResource(R.string.mood_emoji_hint),
-                    )
+                // A tap opens the picker. Nobody should have to go hunting for the emoji
+                // key on their keyboard to say how their day was.
+                Box(
+                    modifier = Modifier
+                        .size(58.dp)
+                        .background(Ink, RoundedCornerShape(14.dp))
+                        .border(1.dp, com.filo.app.ui.theme.Line, RoundedCornerShape(14.dp))
+                        .clickable { pickingEmoji = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (emojiDraft.isBlank()) {
+                        Text("+", style = FiloType.Title, color = Crimson)
+                    } else {
+                        Text(emojiDraft, fontSize = 26.sp)
+                    }
                 }
                 Spacer(Modifier.width(12.dp))
                 Box(modifier = Modifier.weight(1f)) {
@@ -543,6 +583,14 @@ private fun ComposerDialog(
             }
         }
     }
+
+    if (pickingEmoji) {
+        com.filo.app.ui.components.EmojiPickerDialog(
+            onPick = { emojiDraft = it; pickingEmoji = false },
+            onClear = { emojiDraft = ""; pickingEmoji = false },
+            onDismiss = { pickingEmoji = false },
+        )
+    }
 }
 
 /** How long you have been each other's, front and centre rather than a footnote. */
@@ -581,11 +629,15 @@ private fun PhotoCard(
     val theirPhoto = photoUrls[partner?.dailyPhotoUrl]
     val minePhoto = photoUrls[me?.dailyPhotoUrl]
 
+    fun pick() = picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+
     FiloCard {
         SectionLabel(stringResource(R.string.label_photo))
         Spacer(Modifier.height(12.dp))
 
-        // Hers first, full size: this card exists to be looked at, not scanned past.
+        // Theirs, then yours, each one clearly whose it is. The empty state is a quiet
+        // placeholder rather than a headline - a bold "No photo yet" sitting above someone
+        // else's picture reads as if that picture is the thing that is missing.
         if (theirPhoto != null) {
             DailyPhoto(
                 url = theirPhoto,
@@ -594,7 +646,12 @@ private fun PhotoCard(
                 onClick = { onViewImage(theirPhoto, partner?.displayName) },
             )
         } else {
-            CardValue(stringResource(R.string.widget_no_photo))
+            EmptyPhotoSlot(
+                text = stringResource(
+                    R.string.photo_waiting_for,
+                    partner?.displayName ?: stringResource(R.string.state_waiting_for_partner),
+                ),
+            )
         }
 
         Spacer(Modifier.height(14.dp))
@@ -605,20 +662,36 @@ private fun PhotoCard(
                 name = me?.displayName,
                 takenAt = me?.dailyPhotoAt,
                 onClick = { onViewImage(minePhoto, me?.displayName) },
-                onLongClick = {
-                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                },
+                onLongClick = { pick() },
             )
-            Spacer(Modifier.height(6.dp))
-            Timestamp(stringResource(R.string.photo_replace_yours))
-        } else {
-            FiloSecondaryButton(
-                text = stringResource(R.string.photo_set_yours),
-                onClick = {
-                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                },
-            )
+            Spacer(Modifier.height(10.dp))
         }
+        // Always a real button, never a hint you are supposed to guess is tappable.
+        FiloSecondaryButton(
+            text = stringResource(
+                if (minePhoto != null) R.string.photo_replace_yours else R.string.photo_set_yours,
+            ),
+            onClick = { pick() },
+        )
+    }
+}
+
+/** The shape of a photo that is not there yet, so the card keeps its rhythm. */
+@Composable
+private fun EmptyPhotoSlot(text: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .background(Ink.copy(alpha = 0.5f), androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+            .border(
+                1.dp,
+                com.filo.app.ui.theme.Line,
+                androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = FiloType.Body, color = Ash)
     }
 }
 
