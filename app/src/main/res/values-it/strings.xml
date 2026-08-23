@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Filo</string>
+
+    <!-- Pairing -->
+    <string name="pairing_welcome">Filo</string>
+    <string name="pairing_subtitle">Un filo tra due telefoni.</string>
+    <string name="pairing_name_label">Il tuo nome</string>
+    <string name="pairing_name_hint">Come ti vedrà?</string>
+    <string name="pairing_language_label">Lingua</string>
+    <string name="pairing_language_en">English</string>
+    <string name="pairing_language_it">Italiano</string>
+    <string name="pairing_create">Crea un legame</string>
+    <string name="pairing_join">Entra con un codice</string>
+    <string name="pairing_back">Indietro</string>
+    <string name="pairing_code_label">Il suo codice</string>
+    <string name="pairing_code_hint">6 lettere e numeri</string>
+    <string name="pairing_code_submit">Entra</string>
+    <string name="pairing_your_code_label">Il tuo codice</string>
+    <string name="pairing_your_code_body">Mandaglielo. Lo inserisce una volta e siete collegati.</string>
+    <string name="pairing_share">Condividi il codice</string>
+    <string name="pairing_share_text">Raggiungimi su Filo. Il mio codice è %1$s.</string>
+    <string name="pairing_share_chooser">Manda il codice</string>
+    <string name="pairing_waiting">In attesa che entri…</string>
+    <string name="pairing_done">Continua</string>
+    <string name="pairing_error_no_code">Nessun legame con questo codice. Controlla le lettere e riprova.</string>
+    <string name="pairing_error_full">Questo legame ha già due persone.</string>
+    <string name="pairing_error_offline">Non riesco a raggiungere il server. Controlla la connessione e riprova.</string>
+    <string name="pairing_error_unknown">Qualcosa è andato storto. Riprova.</string>
+    <string name="pairing_name_required">Prima scrivi un nome.</string>
+
+    <!-- Home -->
+    <string name="home_title">Filo</string>
+    <string name="label_their_day">La sua giornata</string>
+    <string name="label_distance">Distanza</string>
+    <string name="label_weather">Il suo tempo</string>
+    <string name="label_battery">Batteria</string>
+    <string name="label_mood">Umore</string>
+    <string name="label_note">Nota del giorno</string>
+    <string name="label_photo">Foto del giorno</string>
+    <string name="label_next_visit">Prossima visita</string>
+    <string name="label_together">Insieme</string>
+    <string name="label_bucket">Lista dei desideri</string>
+    <string name="label_you">Tu</string>
+    <string name="label_us">Noi</string>
+    <string name="label_thoughts">I nostri pensieri</string>
+    <string name="thoughts_yours_empty">Dì qualcosa.</string>
+    <string name="thoughts_edit">Cambia umore e nota</string>
+    <string name="avatar_change_hint">Tocca la tua faccia per cambiare foto</string>
+    <string name="photo_set_yours">Metti la tua foto del giorno</string>
+    <string name="photo_replace_yours">Cambia la tua foto del giorno</string>
+
+    <string name="state_awake">Sveglia</string>
+    <string name="state_asleep">Dorme</string>
+    <string name="state_unknown">Non impostato</string>
+    <string name="state_waiting_for_partner">In attesa che entri</string>
+    <string name="state_no_data">Ancora niente</string>
+    <string name="state_offline">Offline. Mostro l\'ultima cosa vista.</string>
+
+    <string name="distance_km">%1$s km di distanza</string>
+    <string name="distance_stale">La distanza non è aggiornata</string>
+    <string name="distance_unknown">Ancora nessuna posizione</string>
+    <string name="distance_location_off">Posizione disattivata</string>
+    <string name="distance_open_settings">Apri le impostazioni</string>
+    <string name="distance_cities">Da %1$s a %2$s</string>
+    <string name="distance_live">In diretta</string>
+    <string name="distance_their_update">La sua posizione %1$s</string>
+    <string name="distance_your_update">La tua %1$s</string>
+    <string name="distance_live_hint">In diretta mentre avete entrambi Filo aperto.</string>
+
+    <string name="battery_charging">%1$d%%, in carica</string>
+    <string name="battery_plain">%1$d%%</string>
+    <string name="battery_unknown">Batteria sconosciuta</string>
+
+    <string name="days_together">Insieme da %1$s giorni</string>
+    <string name="days_together_unset">Imposta la data d\'inizio</string>
+
+    <!-- Countdowns -->
+    <string name="countdown_today">Oggi</string>
+    <string name="countdown_tomorrow">Domani</string>
+    <string name="countdown_days">giorni</string>
+    <string name="countdown_since">%1$s giorni fa</string>
+    <string name="countdown_days_since">giorni fa</string>
+    <string name="countdowns_title">Conti alla rovescia</string>
+    <string name="countdowns_add">Aggiungi un conto alla rovescia</string>
+    <string name="countdowns_empty">Ancora niente da aspettare.</string>
+    <string name="countdowns_label_en">Etichetta in inglese</string>
+    <string name="countdowns_label_it">Etichetta in italiano</string>
+    <string name="countdowns_label_it_hint">Lascia vuoto per usare la stessa</string>
+    <string name="countdowns_date">Data</string>
+    <string name="countdowns_emoji">Emoji</string>
+    <string name="countdowns_primary">Questa è la prossima visita</string>
+    <string name="countdowns_make_primary">Rendila la prossima visita</string>
+    <string name="countdowns_save">Salva</string>
+    <string name="countdowns_delete">Elimina</string>
+    <string name="countdowns_cancel">Annulla</string>
+
+    <!-- Mood and note -->
+    <string name="mood_title">Come stai?</string>
+    <string name="mood_text_hint">In poche parole (facoltativo)</string>
+    <string name="mood_clear">Cancella</string>
+    <string name="note_hint">Una riga per lui</string>
+    <string name="note_counter">%1$d / %2$d</string>
+    <string name="save">Salva</string>
+    <string name="cancel">Annulla</string>
+    <string name="edit">Modifica</string>
+
+    <!-- Bucket list -->
+    <string name="bucket_title">Lista dei desideri</string>
+    <string name="bucket_add_hint">Qualcosa da fare insieme</string>
+    <string name="bucket_add">Aggiungi</string>
+    <string name="bucket_done_section">Fatto</string>
+    <string name="bucket_empty">Ancora niente sulla lista.</string>
+    <string name="bucket_delete">Elimina</string>
+    <string name="bucket_done_on">Fatto %1$s</string>
+
+    <!-- Thinking of you -->
+    <string name="ping_button">Ti penso</string>
+    <string name="ping_sent">Inviato</string>
+    <string name="ping_wait">Aspetta un minuto</string>
+    <string name="ping_notification_title">Filo</string>
+    <string name="ping_notification_body">%1$s sta pensando a te</string>
+    <string name="ping_channel_name">Ti penso</string>
+    <string name="ping_channel_description">Quando tocca il cuore.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_name">Il tuo nome</string>
+    <string name="settings_language">Lingua</string>
+    <string name="settings_clock">Orologio</string>
+    <string name="settings_clock_12">12 ore</string>
+    <string name="settings_clock_24">24 ore</string>
+    <string name="settings_sleep">Orario del sonno</string>
+    <string name="settings_sleep_start">Dormo dalle</string>
+    <string name="settings_sleep_end">Sveglia alle</string>
+    <string name="settings_since">Insieme dal</string>
+    <string name="settings_invite_code">Il tuo codice</string>
+    <string name="settings_invite_code_body">Tienilo. Se un telefono perde i dati, è così che vi ricollegate.</string>
+    <string name="settings_battery_optimisation">Consenti gli aggiornamenti in background</string>
+    <string name="settings_battery_optimisation_body">Alcuni telefoni bloccano gli aggiornamenti in background e i widget restano fermi.</string>
+    <string name="settings_permissions">Autorizzazioni</string>
+    <string name="settings_gallery">Galleria dei componenti</string>
+    <string name="settings_about">Info</string>
+    <string name="settings_version">Versione %1$s</string>
+    <string name="settings_licenses">Licenze dei caratteri</string>
+
+    <!-- Permissions -->
+    <string name="permission_location_title">Dove sei</string>
+    <string name="permission_location_body">Filo usa la tua posizione approssimativa per calcolare quanto siete distanti. La legge solo quando l\'app è aperta, mai in background, e la vede solo lui.</string>
+    <string name="permission_notifications_title">Il cuore</string>
+    <string name="permission_notifications_body">Le notifiche servono a una cosa sola: dirti quando ti sta pensando.</string>
+    <string name="permission_continue">Continua</string>
+    <string name="permission_not_now">Non ora</string>
+    <string name="permission_denied_body">L\'autorizzazione è disattivata. Tutto il resto funziona lo stesso.</string>
+    <string name="permission_open_settings">Apri le impostazioni dell\'app</string>
+
+    <!-- Weather, WMO codes -->
+    <string name="weather_clear">Sereno</string>
+    <string name="weather_mainly_clear">Prevalentemente sereno</string>
+    <string name="weather_partly_cloudy">Parzialmente nuvoloso</string>
+    <string name="weather_overcast">Coperto</string>
+    <string name="weather_fog">Nebbia</string>
+    <string name="weather_drizzle">Pioviggine</string>
+    <string name="weather_rain">Pioggia</string>
+    <string name="weather_freezing_rain">Pioggia gelata</string>
+    <string name="weather_snow">Neve</string>
+    <string name="weather_showers">Rovesci</string>
+    <string name="weather_snow_showers">Rovesci di neve</string>
+    <string name="weather_thunderstorm">Temporale</string>
+    <string name="weather_unknown">Tempo sconosciuto</string>
+    <string name="weather_temperature">%1$s°</string>
+
+    <!-- Widgets -->
+    <string name="widget_together_label">Filo · Insieme</string>
+    <string name="widget_together_description">La sua giornata, il tempo, la batteria e la distanza.</string>
+    <string name="widget_countdown_label">Filo · Conto alla rovescia</string>
+    <string name="widget_countdown_description">Giorni alla prossima visita.</string>
+    <string name="widget_heart_label">Filo · Ti penso</string>
+    <string name="widget_heart_description">Un tocco manda un cuore.</string>
+    <string name="widget_photo_label">Filo · Foto</string>
+    <string name="widget_photo_description">La sua foto del giorno e la sua nota.</string>
+    <string name="widget_not_paired">Apri Filo per collegarti</string>
+    <string name="widget_no_data">Ancora niente</string>
+    <string name="widget_no_countdown">Nessun conto alla rovescia</string>
+    <string name="widget_no_photo">Ancora nessuna foto</string>
+
+    <!-- Always-on location -->
+    <string name="settings_tracking">Posizione in diretta</string>
+    <string name="settings_tracking_body">Condividi dove sei di continuo, così può vederlo anche quando hai il telefono in tasca. Consuma più batteria e resta una notifica fissa mentre è attivo.</string>
+    <string name="settings_tracking_on">Condivisione continua</string>
+    <string name="settings_tracking_off">Solo con l\'app aperta</string>
+    <string name="permission_background_title">Sempre</string>
+    <string name="permission_background_body">Per continuare a condividere la tua posizione con Filo chiuso, Android ti chiede di scegliere <b>Consenti sempre</b> nella schermata seguente. Non cambia nient\'altro, e puoi disattivarlo da Filo quando vuoi.</string>
+    <string name="permission_precise_title">Precisa o approssimativa</string>
+    <string name="permission_precise_body">La posizione precisa mostra la via in cui sei. Quella approssimativa mostra solo la città. Vanno bene entrambe.</string>
+    <string name="tracking_notification_title">Stai condividendo la posizione</string>
+    <string name="tracking_notification_text">Filo sta condividendo dove sei con %1$s.</string>
+    <string name="tracking_notification_channel">Posizione in diretta</string>
+    <string name="tracking_stop">Smetti di condividere</string>
+    <string name="distance_tracking_live">Condivisione continua</string>
+
+    <!-- Spotify -->
+    <string name="spotify_label">Sta ascoltando</string>
+    <string name="spotify_connect">Collega Spotify</string>
+    <string name="spotify_disconnect">Scollega Spotify</string>
+    <string name="spotify_not_connected">Collega Spotify per condividere cosa stai ascoltando.</string>
+    <string name="spotify_nothing">Non sta ascoltando niente</string>
+    <string name="spotify_play_this">Ascoltalo sul tuo Spotify</string>
+    <string name="spotify_not_installed">Spotify non è installato su questo telefono.</string>
+    <string name="spotify_settings">Spotify</string>
+    <string name="spotify_settings_body">Filo mostra a ognuno cosa sta ascoltando l\'altro. Toccandolo si apre il brano nel tuo Spotify.</string>
+    <string name="day_state_asleep_until">Dorme fino alle %1$s</string>
+    <string name="day_state_awake_until">Sveglia fino alle %1$s</string>
+    <string name="day_state_unknown">Orari non impostati</string>
+    <string name="day_state_unknown_short">Sconosciuto</string>
+    <string name="day_state_both_awake">Siete svegli tutti e due</string>
+    <string name="day_state_overlap">Svegli insieme %1$s</string>
+    <string name="day_state_no_overlap">Le vostre ore di veglia non si sovrappongono</string>
+    <string name="day_state_legend_awake">sveglio</string>
+    <string name="day_state_legend_asleep">dorme</string>
+    <string name="day_state_now">ora</string>
+    <string name="setup_step_of">Passo %1$d di %2$d</string>
+    <string name="setup_battery_title">Tienilo attivo</string>
+    <string name="setup_battery_body">Android mette in pausa le app per risparmiare batteria, e questo fermerebbe la condivisione di notte. La schermata seguente chiede se Filo può restare attivo. Scegli Consenti.</string>
+    <string name="setup_autorevoke_title">Non mettere Filo in pausa</string>
+    <string name="setup_autorevoke_body">Se un telefono passa mesi senza aprire Filo, Android gli toglie le autorizzazioni da solo e la condivisione muore in silenzio. Nella schermata seguente disattiva "Sospendi attività se inutilizzata".</string>
+    <string name="permission_background_body_settings">Android non lo chiede dentro l\'app. Tocca Continua, poi scegli Autorizzazioni, poi Posizione, poi scegli l\'opzione qui sotto.</string>
+    <string name="permission_background_label">Scegli: %1$s</string>
+    <string name="bucket_progress">Avanzamento</string>
+    <string name="bucket_progress_count">%1$d su %2$d</string>
+    <string name="mood_emoji_hint">Emoji</string>
+    <string name="mood_emoji_any">Va bene qualsiasi emoji. Usa il tasto emoji della tastiera.</string>
+    <string name="map_open">Tocca per aprire in Mappe</string>
+    <string name="map_attribution">© OpenStreetMap, CARTO</string>
+    <string name="bucket_see_more">Vedi tutto, altri %1$d</string>
+    <string name="bucket_see_all">Vedi tutta la lista</string>
+    <string name="bucket_all_done">Avete fatto tutto quello che c\'era.</string>
+</resources>

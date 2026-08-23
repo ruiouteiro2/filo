@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Filo</string>
+
+    <!-- Pairing -->
+    <string name="pairing_welcome">Filo</string>
+    <string name="pairing_subtitle">A thread between two phones.</string>
+    <string name="pairing_name_label">Your name</string>
+    <string name="pairing_name_hint">What should they see?</string>
+    <string name="pairing_language_label">Language</string>
+    <string name="pairing_language_en">English</string>
+    <string name="pairing_language_it">Italiano</string>
+    <string name="pairing_create">Create a link</string>
+    <string name="pairing_join">Join with a code</string>
+    <string name="pairing_back">Back</string>
+    <string name="pairing_code_label">Their code</string>
+    <string name="pairing_code_hint">6 letters and numbers</string>
+    <string name="pairing_code_submit">Join</string>
+    <string name="pairing_your_code_label">Your code</string>
+    <string name="pairing_your_code_body">Send this to them. They enter it once and you are linked.</string>
+    <string name="pairing_share">Share the code</string>
+    <string name="pairing_share_text">Join me on Filo. My code is %1$s.</string>
+    <string name="pairing_share_chooser">Send the code</string>
+    <string name="pairing_waiting">Waiting for them to join…</string>
+    <string name="pairing_done">Continue</string>
+    <string name="pairing_error_no_code">No link with that code. Check the letters and try again.</string>
+    <string name="pairing_error_full">That link already has two people in it.</string>
+    <string name="pairing_error_offline">Cannot reach the server. Check the connection and try again.</string>
+    <string name="pairing_error_unknown">Something went wrong. Try again.</string>
+    <string name="pairing_name_required">Put a name in first.</string>
+
+    <!-- Home -->
+    <string name="home_title">Filo</string>
+    <string name="label_their_day">Their day</string>
+    <string name="label_distance">Apart</string>
+    <string name="label_weather">Their weather</string>
+    <string name="label_battery">Battery</string>
+    <string name="label_mood">Mood</string>
+    <string name="label_note">Note of the day</string>
+    <string name="label_photo">Photo of the day</string>
+    <string name="label_next_visit">Next visit</string>
+    <string name="label_together">Together</string>
+    <string name="label_bucket">Bucket list</string>
+    <string name="label_you">You</string>
+    <string name="label_us">Us</string>
+    <string name="label_thoughts">Our thoughts</string>
+    <string name="thoughts_yours_empty">Say something.</string>
+    <string name="thoughts_edit">Change your mood and note</string>
+    <string name="avatar_change_hint">Tap your face to change your photo</string>
+    <string name="photo_set_yours">Set your photo of the day</string>
+    <string name="photo_replace_yours">Replace your photo of the day</string>
+
+    <string name="state_awake">Awake</string>
+    <string name="state_asleep">Asleep</string>
+    <string name="state_unknown">Not set yet</string>
+    <string name="state_waiting_for_partner">Waiting for them to join</string>
+    <string name="state_no_data">Nothing yet</string>
+    <string name="state_offline">Offline. Showing the last thing we saw.</string>
+
+    <string name="distance_km">%1$s km apart</string>
+    <string name="distance_stale">Distance is stale</string>
+    <string name="distance_unknown">No location yet</string>
+    <string name="distance_location_off">Location is off</string>
+    <string name="distance_open_settings">Open settings</string>
+    <string name="distance_cities">%1$s to %2$s</string>
+    <string name="distance_live">Live</string>
+    <string name="distance_their_update">Their location %1$s</string>
+    <string name="distance_your_update">Yours %1$s</string>
+    <string name="distance_live_hint">Live while you both have Filo open.</string>
+
+    <string name="battery_charging">%1$d%%, charging</string>
+    <string name="battery_plain">%1$d%%</string>
+    <string name="battery_unknown">Battery unknown</string>
+
+    <string name="days_together">Together %1$s days</string>
+    <string name="days_together_unset">Set your start date</string>
+
+    <!-- Countdowns -->
+    <string name="countdown_today">Today</string>
+    <string name="countdown_tomorrow">Tomorrow</string>
+    <string name="countdown_days">days</string>
+    <string name="countdown_since">%1$s days since</string>
+    <string name="countdown_days_since">days since</string>
+    <string name="countdowns_title">Countdowns</string>
+    <string name="countdowns_add">Add a countdown</string>
+    <string name="countdowns_empty">Nothing to count down to yet.</string>
+    <string name="countdowns_label_en">Label in English</string>
+    <string name="countdowns_label_it">Label in Italian</string>
+    <string name="countdowns_label_it_hint">Leave blank to use the same</string>
+    <string name="countdowns_date">Date</string>
+    <string name="countdowns_emoji">Emoji</string>
+    <string name="countdowns_primary">This is the next visit</string>
+    <string name="countdowns_make_primary">Make this the next visit</string>
+    <string name="countdowns_save">Save</string>
+    <string name="countdowns_delete">Delete</string>
+    <string name="countdowns_cancel">Cancel</string>
+
+    <!-- Mood and note -->
+    <string name="mood_title">How are you?</string>
+    <string name="mood_text_hint">In a few words (optional)</string>
+    <string name="mood_clear">Clear</string>
+    <string name="note_hint">One line for them</string>
+    <string name="note_counter">%1$d / %2$d</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
+
+    <!-- Bucket list -->
+    <string name="bucket_title">Bucket list</string>
+    <string name="bucket_add_hint">Something to do together</string>
+    <string name="bucket_add">Add</string>
+    <string name="bucket_done_section">Done</string>
+    <string name="bucket_empty">Nothing on the list yet.</string>
+    <string name="bucket_delete">Delete</string>
+    <string name="bucket_done_on">Done %1$s</string>
+
+    <!-- Thinking of you -->
+    <string name="ping_button">Thinking of you</string>
+    <string name="ping_sent">Sent</string>
+    <string name="ping_wait">Give it a minute</string>
+    <string name="ping_notification_title">Filo</string>
+    <string name="ping_notification_body">%1$s is thinking of you</string>
+    <string name="ping_channel_name">Thinking of you</string>
+    <string name="ping_channel_description">When they tap the heart.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_name">Your name</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_clock">Clock</string>
+    <string name="settings_clock_12">12 hour</string>
+    <string name="settings_clock_24">24 hour</string>
+    <string name="settings_sleep">Sleep window</string>
+    <string name="settings_sleep_start">Asleep from</string>
+    <string name="settings_sleep_end">Awake at</string>
+    <string name="settings_since">Together since</string>
+    <string name="settings_invite_code">Your invite code</string>
+    <string name="settings_invite_code_body">Keep this. If a phone ever loses its data, this is how you pair again.</string>
+    <string name="settings_battery_optimisation">Allow background updates</string>
+    <string name="settings_battery_optimisation_body">Some phones stop apps updating in the background, which freezes the widgets.</string>
+    <string name="settings_permissions">Permissions</string>
+    <string name="settings_gallery">Component gallery</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_licenses">Font licences</string>
+
+    <!-- Permissions -->
+    <string name="permission_location_title">Where you are</string>
+    <string name="permission_location_body">Filo uses your approximate location to work out how far apart you are. It is only ever read while the app is open, never in the background, and it is only ever shown to them.</string>
+    <string name="permission_notifications_title">The heart</string>
+    <string name="permission_notifications_body">Notifications are only used for one thing: telling you when they are thinking of you.</string>
+    <string name="permission_continue">Continue</string>
+    <string name="permission_not_now">Not now</string>
+    <string name="permission_denied_body">Permission is off. Everything else still works.</string>
+    <string name="permission_open_settings">Open app settings</string>
+
+    <!-- Weather, WMO codes -->
+    <string name="weather_clear">Clear</string>
+    <string name="weather_mainly_clear">Mainly clear</string>
+    <string name="weather_partly_cloudy">Partly cloudy</string>
+    <string name="weather_overcast">Overcast</string>
+    <string name="weather_fog">Fog</string>
+    <string name="weather_drizzle">Drizzle</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_freezing_rain">Freezing rain</string>
+    <string name="weather_snow">Snow</string>
+    <string name="weather_showers">Showers</string>
+    <string name="weather_snow_showers">Snow showers</string>
+    <string name="weather_thunderstorm">Thunderstorm</string>
+    <string name="weather_unknown">Weather unknown</string>
+    <string name="weather_temperature">%1$s°</string>
+
+    <!-- Widgets -->
+    <string name="widget_together_label">Filo · Together</string>
+    <string name="widget_together_description">Their day, weather, battery and distance.</string>
+    <string name="widget_countdown_label">Filo · Countdown</string>
+    <string name="widget_countdown_description">Days until the next visit.</string>
+    <string name="widget_heart_label">Filo · Thinking of you</string>
+    <string name="widget_heart_description">One tap sends a heart.</string>
+    <string name="widget_photo_label">Filo · Photo</string>
+    <string name="widget_photo_description">Their photo of the day and their note.</string>
+    <string name="widget_not_paired">Open Filo to pair</string>
+    <string name="widget_no_data">No data yet</string>
+    <string name="widget_no_countdown">No countdown set</string>
+    <string name="widget_no_photo">No photo yet</string>
+
+    <!-- Always-on location -->
+    <string name="settings_tracking">Live location</string>
+    <string name="settings_tracking_body">Share where you are continuously, so they can see it even when your phone is in your pocket. This uses more battery and there is a permanent notification while it runs.</string>
+    <string name="settings_tracking_on">Sharing continuously</string>
+    <string name="settings_tracking_off">Only while the app is open</string>
+    <string name="permission_background_title">All the time</string>
+    <string name="permission_background_body">To keep sharing your location when Filo is closed, Android needs you to choose <b>Allow all the time</b> on the next screen. Nothing else changes, and you can turn this off in Filo whenever you like.</string>
+    <string name="permission_precise_title">Precise or approximate</string>
+    <string name="permission_precise_body">Precise location shows them the street you are on. Approximate only shows the town. Either works.</string>
+    <string name="tracking_notification_title">Sharing your location</string>
+    <string name="tracking_notification_text">Filo is sharing where you are with %1$s.</string>
+    <string name="tracking_notification_channel">Live location</string>
+    <string name="tracking_stop">Stop sharing</string>
+    <string name="distance_tracking_live">Sharing continuously</string>
+
+    <!-- Spotify -->
+    <string name="spotify_label">Listening to</string>
+    <string name="spotify_connect">Connect Spotify</string>
+    <string name="spotify_disconnect">Disconnect Spotify</string>
+    <string name="spotify_not_connected">Connect Spotify to share what you are playing.</string>
+    <string name="spotify_nothing">Not playing anything</string>
+    <string name="spotify_play_this">Play this on your Spotify</string>
+    <string name="spotify_not_installed">Spotify is not installed on this phone.</string>
+    <string name="spotify_settings">Spotify</string>
+    <string name="spotify_settings_body">Filo shows each of you what the other is playing. Tapping it opens the track in your own Spotify.</string>
+    <string name="day_state_asleep_until">Asleep until %1$s</string>
+    <string name="day_state_awake_until">Awake until %1$s</string>
+    <string name="day_state_unknown">Hours not set</string>
+    <string name="day_state_unknown_short">Unknown</string>
+    <string name="day_state_both_awake">You are both awake</string>
+    <string name="day_state_overlap">Awake together %1$s</string>
+    <string name="day_state_no_overlap">Your waking hours do not overlap</string>
+    <string name="day_state_legend_awake">awake</string>
+    <string name="day_state_legend_asleep">asleep</string>
+    <string name="day_state_now">now</string>
+    <string name="setup_step_of">Step %1$d of %2$d</string>
+    <string name="setup_battery_title">Keep it running</string>
+    <string name="setup_battery_body">Android puts apps to sleep to save power, which would stop sharing overnight. The next screen asks whether Filo may keep running. Choose Allow.</string>
+    <string name="setup_autorevoke_title">Do not pause Filo</string>
+    <string name="setup_autorevoke_body">If a phone goes months without opening Filo, Android removes its permissions automatically and sharing dies silently. On the next screen, turn off "Pause app activity if unused".</string>
+    <string name="permission_background_body_settings">Android will not ask about this inside the app. Tap Continue, then choose Permissions, then Location, then pick the option below.</string>
+    <string name="permission_background_label">Choose: %1$s</string>
+    <string name="bucket_progress">Progress</string>
+    <string name="bucket_progress_count">%1$d of %2$d</string>
+    <string name="mood_emoji_hint">Emoji</string>
+    <string name="mood_emoji_any">Any emoji works. Use the emoji key on your keyboard.</string>
+    <string name="map_open">Tap to open in Maps</string>
+    <string name="map_attribution">© OpenStreetMap, CARTO</string>
+    <string name="bucket_see_more">See all, %1$d more</string>
+    <string name="bucket_see_all">See the whole list</string>
+    <string name="bucket_all_done">Everything on the list is done.</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Dark only, by design. There is no light theme.
+      Parented on AppCompat because the activity is an AppCompatActivity, which is what makes
+      the per app language setting work below API 33.
+    -->
+    <style name="Theme.Filo" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/ink</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:colorBackground">@color/ink</item>
+        <item name="colorPrimary">@color/crimson</item>
+        <item name="colorAccent">@color/crimson</item>
+    </style>
+</resources>

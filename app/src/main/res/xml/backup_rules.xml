@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto backup keeps only the DataStore file, which holds the anonymous session and the
+  pairing. If a phone is restored, the pair survives instead of needing the invite code
+  again. Nothing else is worth backing up: the widget bitmaps are regenerated on next sync.
+-->
+<full-backup-content>
+    <include domain="file" path="datastore/" />
+</full-backup-content>

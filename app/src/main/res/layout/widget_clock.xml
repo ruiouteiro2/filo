@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android ticks a TextClock natively, for free. Updating a widget every minute just to move
+  a clock forward would cost real battery, so the clock is the one piece of the widget that
+  is a real View rather than Glance composition.
+-->
+<TextClock xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_clock"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:format12Hour="h:mm a"
+    android:format24Hour="HH:mm"
+    android:fontFamily="@font/karla_bold"
+    android:includeFontPadding="false"
+    android:textColor="@color/crimson"
+    android:textSize="24sp" />

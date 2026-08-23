@@ -1,0 +1,33 @@
+# Build output
+build/
+.gradle/
+.cxx/
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+
+# Secrets. None of these may ever be committed.
+# (gitignore has no trailing-comment syntax: a comment after a pattern on the
+#  same line makes the pattern match nothing, which is how secrets leak.)
+
+# Supabase URL + publishable key, Spotify client id, sdk.dir
+local.properties
+
+# Release signing passwords, and the keystore itself
+keystore.properties
+keystore/
+*.jks
+*.keystore
+
+# Firebase config and the FCM service account private key
+google-services.json
+*service-account*.json
+
+# Local Supabase stack state, which holds generated dev secrets
+supabase/.temp/
+supabase/.branches/
+
+# OS noise
+.DS_Store
+Thumbs.db

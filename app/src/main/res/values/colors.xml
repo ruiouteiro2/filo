@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ink">#0A0709</color>
+    <color name="surface_dark">#16090C</color>
+    <color name="blood">#B01523</color>
+    <color name="crimson">#D41E2F</color>
+    <color name="bone">#F2E8E6</color>
+    <color name="ash">#8F7377</color>
+    <color name="ember">#FF3B30</color>
+</resources>
