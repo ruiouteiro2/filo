@@ -235,4 +235,13 @@
     <string name="bucket_see_more">See all, %1$d more</string>
     <string name="bucket_see_all">See the whole list</string>
     <string name="bucket_all_done">Everything on the list is done.</string>
+    <string name="countdowns_new">New countdown</string>
+    <string name="countdowns_edit">Edit countdown</string>
+    <string name="countdowns_what">What are you waiting for</string>
+    <string name="countdowns_name">Name</string>
+    <string name="countdowns_when">When</string>
+    <string name="countdowns_change">Change</string>
+    <string name="countdowns_add_translation">Add an Italian name</string>
+    <string name="countdowns_translation_hint">Leave this empty and the same name is used in both languages.</string>
+    <string name="countdowns_primary_hint">The one shown on the home screen and the widget.</string>
 </resources>
