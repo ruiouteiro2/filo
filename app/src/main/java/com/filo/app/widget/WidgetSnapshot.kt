@@ -76,6 +76,9 @@ object WidgetSnapshotStore {
         clock24h: Boolean,
         avatarImage: String?,
         photoImage: String?,
+        /** Last known weather, used when this round's fetch came back empty. */
+        fallbackWeatherCode: Int? = null,
+        fallbackWeatherTemp: Int? = null,
     ): WidgetSnapshot {
         val partner = couple.partner
         val zone = PgTime.zone(partner?.timezone)
@@ -97,8 +100,8 @@ object WidgetSnapshotStore {
             partnerNote = partner?.noteText?.takeIf { it.isNotBlank() },
             partnerBattery = partner?.batteryLevel,
             partnerCharging = partner?.batteryCharging == true,
-            weatherCode = weather?.code,
-            weatherTemp = weather?.temperatureC,
+            weatherCode = weather?.code ?: fallbackWeatherCode,
+            weatherTemp = weather?.temperatureC ?: fallbackWeatherTemp,
             distanceKm = (distance as? DistanceState.Known)?.km,
             distanceKnown = distance is DistanceState.Known,
             countdownLabelEn = primary?.labelEn,
@@ -108,7 +111,7 @@ object WidgetSnapshotStore {
             partnerTrack = partner?.spotifyTrackName?.takeIf { it.isNotBlank() },
             partnerArtist = partner?.spotifyArtist?.takeIf { it.isNotBlank() },
             partnerTrackId = partner?.spotifyTrackId?.takeIf { it.isNotBlank() },
-            partnerMusicPlaying = partner?.spotifyIsPlaying == true,
+            partnerMusicPlaying = partner?.isNowPlayingLive == true,
             partnerAvatar = avatarImage,
             photoImage = photoImage,
             locale = locale,

@@ -383,6 +383,14 @@ class FiloRepository(private val context: Context) {
         set("spotify_updated_at", Instant.now().toString())
     }
 
+    /**
+     * Still playing, nothing changed. Only moves the timestamp, so the other phone can tell
+     * a live session from one that died with the app that owned it.
+     */
+    suspend fun touchNowPlaying(): Boolean = updateMe {
+        set("spotify_updated_at", Instant.now().toString())
+    }
+
     /** Playback stopped: keep what it was, just stop calling it live. */
     suspend fun setNowPlayingStopped(): Boolean = updateMe {
         set("spotify_is_playing", false)
@@ -597,18 +605,22 @@ class FiloRepository(private val context: Context) {
      * Inserts the row and lets the database trigger do the notifying. The UI throttle here
      * is only courtesy; the real rate limit lives in the Edge Function.
      */
-    suspend fun sendPing(): Boolean = withContext(Dispatchers.IO) {
+    suspend fun sendPing(message: String? = null): Boolean = withContext(Dispatchers.IO) {
         awaitAuthReady()
         val coupleId = prefs.currentPairing().coupleId ?: return@withContext false
         val uid = currentUserId() ?: run {
             Log.w(TAG, "ping skipped: no session")
             return@withContext false
         }
+        val words = message?.trim()?.take(140)?.takeIf { it.isNotEmpty() }
         runCatching {
             client.from("pings").insert(
                 buildJsonObject {
                     put("couple_id", coupleId)
                     put("from_member", uid)
+                    // Absent, not empty: the function reads a blank message as "no words"
+                    // and falls back to the plain thinking-of-you line.
+                    if (words != null) put("message", words)
                 },
             )
         }.onFailure { Log.w(TAG, "ping failed", it) }.isSuccess

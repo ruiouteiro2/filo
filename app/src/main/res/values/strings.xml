@@ -279,4 +279,7 @@
     <string name="update_failed">Could not check right now. Try again in a bit.</string>
     <string name="update_banner">A new version of Filo is ready. Open Settings to install it.</string>
     <string name="composer_title">What\u2019s on your mind</string>
+    <string name="ping_write">Say something</string>
+    <string name="ping_write_hint">A few words for them</string>
+    <string name="ping_send">Send</string>
 </resources>

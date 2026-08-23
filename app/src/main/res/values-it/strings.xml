@@ -279,4 +279,7 @@
     <string name="update_failed">Non riesco a controllare adesso. Riprova tra un po\u2019.</string>
     <string name="update_banner">Una nuova versione di Filo è pronta. Apri le impostazioni per installarla.</string>
     <string name="composer_title">Cosa hai in mente</string>
+    <string name="ping_write">Dille qualcosa</string>
+    <string name="ping_write_hint">Due parole per lei</string>
+    <string name="ping_send">Invia</string>
 </resources>

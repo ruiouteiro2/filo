@@ -45,6 +45,27 @@ class FiloMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
+        // A silent nudge from the other phone: something the widgets show has changed.
+        // Nothing is displayed; we just sync and repaint, which is what makes the widgets
+        // feel live instead of "whatever the half-hour worker last saw".
+        if (message.data["type"] == "sync") {
+            scope.launch {
+                runCatching {
+                    val app = applicationContext
+                    val repository = (app as? FiloApp)?.repository ?: FiloRepository(app)
+                    repository.syncEverything(readLocation = false)
+                    repository.refreshPhotoUrls()
+                    com.filo.app.work.writeSnapshot(
+                        app,
+                        repository,
+                        com.filo.app.core.prefs.FiloPrefs(app),
+                    )
+                    com.filo.app.widget.WidgetUpdater.updateAll(app)
+                }.onFailure { Log.w(TAG, "sync push failed", it) }
+            }
+            return
+        }
+
         val notification = message.notification
         val title = notification?.title ?: getString(R.string.ping_notification_title)
         val body = notification?.body ?: return

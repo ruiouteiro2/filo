@@ -120,7 +120,7 @@ fun HomeScreen(
     onToggleBucket: (String, Boolean) -> Unit,
     updateAvailable: Boolean,
     onOpenSettingsForUpdate: () -> Unit,
-    onPing: () -> Unit,
+    onPing: (String?) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -778,7 +778,7 @@ private fun MusicRow(member: Member?, isMine: Boolean) {
     val context = LocalContext.current
     val name = member?.displayName ?: stringResource(R.string.state_waiting_for_partner)
     val track = member?.spotifyTrackName?.takeIf { it.isNotBlank() }
-    val playing = member?.spotifyIsPlaying == true
+    val playing = member?.isNowPlayingLive == true
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -1047,23 +1047,24 @@ private fun CountdownCard(
 }
 
 @Composable
-private fun PingCard(onPing: () -> Unit) {
+private fun PingCard(onPing: (String?) -> Unit) {
     var sentAt by remember { mutableStateOf<Long?>(null) }
+    var writing by remember { mutableStateOf(false) }
     val recentlySent = sentAt != null && System.currentTimeMillis() - sentAt!! < 60_000
 
     FiloCard(
         onClick = {
             if (!recentlySent) {
-                onPing()
+                onPing(null)
                 sentAt = System.currentTimeMillis()
             }
         },
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Spacer(Modifier.weight(1f))
             Text("♥", fontSize = 26.sp, color = if (recentlySent) Ash else Crimson)
             Spacer(Modifier.width(12.dp))
             Text(
@@ -1071,6 +1072,82 @@ private fun PingCard(onPing: () -> Unit) {
                 style = FiloType.Value,
                 color = if (recentlySent) Ash else Bone,
             )
+            Spacer(Modifier.weight(1f))
+            // The heart says one thing perfectly. This is for everything else.
+            Image(
+                painter = painterResource(R.drawable.ic_edit),
+                contentDescription = stringResource(R.string.ping_write),
+                colorFilter = ColorFilter.tint(if (recentlySent) Ash else Crimson),
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable(enabled = !recentlySent) { writing = true }
+                    .padding(7.dp),
+            )
+        }
+    }
+
+    if (writing) {
+        PingComposer(
+            onDismiss = { writing = false },
+            onSend = { words ->
+                onPing(words)
+                sentAt = System.currentTimeMillis()
+                writing = false
+            },
+        )
+    }
+}
+
+/**
+ * A few words that land on their lock screen as a notification. Deliberately not a chat:
+ * there is no thread, no history and no reply - it arrives, it is read, it is gone.
+ */
+@Composable
+private fun PingComposer(onDismiss: () -> Unit, onSend: (String) -> Unit) {
+    var draft by remember { mutableStateOf("") }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(120)
+        runCatching { focus.requestFocus() }
+    }
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(com.filo.app.ui.theme.SurfaceHigh, com.filo.app.ui.theme.Surface),
+                    ),
+                    RoundedCornerShape(22.dp),
+                )
+                .border(1.dp, com.filo.app.ui.theme.Line, RoundedCornerShape(22.dp))
+                .padding(22.dp),
+        ) {
+            Text(stringResource(R.string.ping_write), style = FiloType.TitleItalic, color = Bone)
+            Spacer(Modifier.height(16.dp))
+            FiloTextField(
+                value = draft,
+                onValueChange = { draft = it.take(140) },
+                label = stringResource(R.string.ping_write_hint),
+                singleLine = false,
+                modifier = Modifier.focusRequester(focus),
+            )
+            Timestamp(stringResource(R.string.note_counter, draft.length, 140))
+            Spacer(Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FiloButton(
+                    text = stringResource(R.string.ping_send),
+                    onClick = { draft.trim().takeIf { it.isNotEmpty() }?.let(onSend) },
+                    modifier = Modifier.weight(1f),
+                )
+                FiloSecondaryButton(
+                    text = stringResource(R.string.cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }

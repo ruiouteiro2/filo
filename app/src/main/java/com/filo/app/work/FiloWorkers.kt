@@ -92,9 +92,23 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
     val photoUrls = repository.photoUrls.value
     val locale = prefs.currentPairing().locale
     val clock24h = prefs.currentClock24h()
+    val previous = WidgetSnapshotStore.read(context)
 
+    // A sync that failed leaves the repository holding an empty couple. Writing that would
+    // replace a good snapshot with a hollow one, and the widgets would go from showing a
+    // life to showing a clock and nothing else - which is exactly what used to happen.
+    val paired = prefs.currentPairing().isPaired
+    if (paired && partner == null && previous.partnerName != null) {
+        Log.i(TAG, "skipping widget write: nothing loaded, keeping the last good snapshot")
+        return
+    }
+
+    // Likewise for the bitmaps: a render that failed (offline, expired URL) keeps the file
+    // that is already on disk rather than blanking the face and the photo of the day.
     val avatar = WidgetImages.renderAvatar(context, photoUrls[partner?.photoUrl])
+        ?: previous.partnerAvatar?.takeIf { java.io.File(it).exists() }
     val photo = WidgetImages.cachePhoto(context, photoUrls[partner?.dailyPhotoUrl])
+        ?: previous.photoImage?.takeIf { java.io.File(it).exists() }
 
     WidgetSnapshotStore.write(
         context,
@@ -106,6 +120,8 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
             clock24h = clock24h,
             avatarImage = avatar,
             photoImage = photo,
+            fallbackWeatherCode = previous.weatherCode,
+            fallbackWeatherTemp = previous.weatherTemp,
         ),
     )
 }

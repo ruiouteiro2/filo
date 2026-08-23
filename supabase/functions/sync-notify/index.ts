@@ -1,24 +1,11 @@
-// Called by the pings_notify trigger. Looks up who to tell, in which language, and sends
-// one FCM notification. The body is translated here, server side, because the recipient's
-// language is a property of the recipient and not of the sender's phone.
+// Called by the members_sync_notify trigger whenever something the widgets show changes
+// (music, mood, note, photos). Sends one silent data message to the partner's phone so its
+// widgets refresh in seconds instead of waiting for the half-hour worker.
 //
-// Deployed with:  supabase functions deploy ping-notify --no-verify-jwt
-// Secrets needed: FIREBASE_SERVICE_ACCOUNT (the whole service account JSON, one line)
+// Deployed with:  supabase functions deploy sync-notify --no-verify-jwt
+// Secrets needed: FIREBASE_SERVICE_ACCOUNT_B64 (same as ping-notify)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.10";
-
-const RATE_LIMIT_SECONDS = 60;
-
-/** The only strings this function can send. Keep in step with strings.xml. */
-const BODIES: Record<string, (name: string) => string> = {
-  en: (name) => `${name} is thinking of you`,
-  it: (name) => `${name} sta pensando a te`,
-};
-
-function bodyFor(locale: string | null, name: string): string {
-  const make = BODIES[locale ?? "en"] ?? BODIES.en;
-  return make(name);
-}
 
 // ---------------------------------------------------------------- FCM auth
 
@@ -38,10 +25,6 @@ function base64Url(input: Uint8Array | string): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-/**
- * Mints a Google OAuth access token from the service account. Signed with Web Crypto so the
- * function has no JWT dependency to keep up to date.
- */
 async function accessToken(serviceAccount: Record<string, string>): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
@@ -84,84 +67,55 @@ async function accessToken(serviceAccount: Record<string, string>): Promise<stri
 
 Deno.serve(async (request) => {
   try {
-    const { ping_id } = await request.json().catch(() => ({ ping_id: null }));
-    if (!ping_id) return new Response("missing ping_id", { status: 400 });
+    const { member_id } = await request.json().catch(() => ({ member_id: null }));
+    if (!member_id) return new Response("missing member_id", { status: 400 });
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: ping, error: pingError } = await supabase
-      .from("pings")
-      .select("id, couple_id, from_member, created_at, message")
-      .eq("id", ping_id)
+    const { data: changed, error } = await supabase
+      .from("members")
+      .select("id, couple_id")
+      .eq("id", member_id)
       .single();
-    if (pingError || !ping) {
-      console.error("ping lookup failed", pingError);
-      return new Response(JSON.stringify({ error: "no such ping" }), { status: 404 });
-    }
-
-    // The real rate limit, enforced here rather than only in the UI: at most one ping per
-    // sender per minute, counted against what is already in the table.
-    const since = new Date(Date.now() - RATE_LIMIT_SECONDS * 1000).toISOString();
-    const { count } = await supabase
-      .from("pings")
-      .select("id", { count: "exact", head: true })
-      .eq("from_member", ping.from_member)
-      .gte("created_at", since)
-      .neq("id", ping.id);
-    if ((count ?? 0) > 0) {
-      return new Response(JSON.stringify({ skipped: "rate_limited" }), { status: 200 });
+    if (error || !changed?.couple_id) {
+      return new Response(JSON.stringify({ skipped: "no_such_member" }), { status: 200 });
     }
 
     const { data: members } = await supabase
       .from("members")
-      .select("id, display_name, locale, fcm_token")
-      .eq("couple_id", ping.couple_id);
-
-    const sender = members?.find((m) => m.id === ping.from_member);
-    const recipient = members?.find((m) => m.id !== ping.from_member);
-    if (!recipient?.fcm_token) {
+      .select("id, fcm_token")
+      .eq("couple_id", changed.couple_id);
+    const partner = members?.find((m) => m.id !== member_id);
+    if (!partner?.fcm_token) {
       return new Response(JSON.stringify({ skipped: "no_token" }), { status: 200 });
     }
 
-    // Base64 first. The raw JSON form contains ~28 real newlines inside private_key, which
-    // do not survive being interpolated through a shell into `supabase secrets set` - the
-    // symptom is a 500 here with "SyntaxError ... at position 1" and a heart that never
-    // arrives. Base64 has no characters a shell can mangle.
     const encoded = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_B64");
     const raw = encoded
       ? new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0)))
       : Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
-
     if (!raw) {
-      // Push is not configured yet. The ping is still recorded; it just does not notify.
-      console.log("no Firebase credentials set, skipping send");
       return new Response(JSON.stringify({ skipped: "not_configured" }), { status: 200 });
     }
 
     let serviceAccount: Record<string, string>;
     try {
       serviceAccount = JSON.parse(raw);
-    } catch (error) {
-      console.error("Firebase credentials are not valid JSON", error);
+    } catch (parseError) {
+      console.error("Firebase credentials are not valid JSON", parseError);
       return new Response(JSON.stringify({ error: "bad_credentials" }), { status: 500 });
     }
     const token = await accessToken(serviceAccount);
 
-    // Their own words win over the canned line. The sender's name becomes the title, so a
-    // note reads like a message from a person rather than an announcement from an app.
-    const senderName = sender?.display_name ?? "Filo";
-    const custom = typeof ping.message === "string" ? ping.message.trim() : "";
+    // Data-only on purpose: nothing appears on screen, the app just wakes and syncs.
     const message = {
       message: {
-        token: recipient.fcm_token,
-        notification: {
-          title: custom ? senderName : "Filo",
-          body: custom || bodyFor(recipient.locale, senderName),
-        },
-        android: { priority: "HIGH", notification: { channel_id: "filo_ping" } },
+        token: partner.fcm_token,
+        data: { type: "sync" },
+        android: { priority: "HIGH" },
       },
     };
 
@@ -176,7 +130,6 @@ Deno.serve(async (request) => {
         body: JSON.stringify(message),
       },
     );
-
     if (!send.ok) {
       const text = await send.text();
       console.error("fcm send failed", send.status, text);
@@ -184,7 +137,7 @@ Deno.serve(async (request) => {
     }
     return new Response(JSON.stringify({ sent: true }), { status: 200 });
   } catch (error) {
-    console.error("ping-notify failed", error);
+    console.error("sync-notify failed", error);
     return new Response(JSON.stringify({ error: String(error) }), { status: 500 });
   }
 });

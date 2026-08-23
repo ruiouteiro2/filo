@@ -38,6 +38,7 @@ class NowPlayingListenerService : NotificationListenerService() {
     private var sessionManager: MediaSessionManager? = null
     private val controllerCallbacks = mutableMapOf<MediaController, MediaController.Callback>()
     private var publishJob: Job? = null
+    private var watchdogJob: Job? = null
     private var lastPublished: LocalNowPlaying? = null
 
     private val repository: FiloRepository by lazy {
@@ -107,6 +108,7 @@ class NowPlayingListenerService : NotificationListenerService() {
         }
         controllerCallbacks.clear()
         publishJob?.cancel()
+        watchdogJob?.cancel()
     }
 
     /**
@@ -134,9 +136,17 @@ class NowPlayingListenerService : NotificationListenerService() {
                     isPlaying = current.isPlaying,
                 )
             }
+            // Spotify can be killed outright - no callback, no session, nobody left to tell
+            // the other phone. Whoever is playing owns a watchdog that keeps the row honest.
+            restartWatchdog(current != null)
         }
     }
 
+    /**
+     * What Spotify is doing right now, playing or paused. Reporting a pause as a pause is
+     * the whole point: a paused track used to be dropped, which left the last "playing"
+     * row standing and the other phone insisting they were still listening.
+     */
     private fun currentlyPlaying(): LocalNowPlaying? {
         val manager = sessionManager ?: return null
         val component = ComponentName(this, NowPlayingListenerService::class.java)
@@ -146,10 +156,34 @@ class NowPlayingListenerService : NotificationListenerService() {
             .mapNotNull { NowPlayingReader.read(it) }
             .sortedByDescending { it.isPlaying }
             .firstOrNull()
-            ?.takeIf { it.isPlaying }
+    }
+
+    /**
+     * A heartbeat while music plays. Without it, a Spotify that is force stopped or swiped
+     * away takes its session with it and the last row we wrote - "playing" - stands forever.
+     * The other phone's UI treats a stale heartbeat as stopped, so this only has to keep
+     * beating while playback is real.
+     */
+    private fun restartWatchdog(playing: Boolean) {
+        watchdogJob?.cancel()
+        if (!playing) return
+        watchdogJob = scope.launch {
+            while (true) {
+                delay(WATCHDOG_MS)
+                val current = currentlyPlaying()
+                if (current == null || !current.isPlaying) {
+                    lastPublished = current
+                    repository.setNowPlayingStopped()
+                    return@launch
+                }
+                repository.touchNowPlaying()
+            }
+        }
     }
 
     private companion object {
         const val DEBOUNCE_MS = 2_500L
+        /** Comfortably inside the staleness window the other phone judges us by. */
+        const val WATCHDOG_MS = 60_000L
     }
 }

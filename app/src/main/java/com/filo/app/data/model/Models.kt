@@ -46,8 +46,21 @@ data class Member(
     @SerialName("spotify_updated_at") val spotifyUpdatedAt: String? = null,
 ) {
     /** Something is worth showing only if it is actually playing and recent. */
+    /**
+     * Live means the row says playing AND it was written recently. The phone that is
+     * playing beats once a minute; if that stopped, the app died mid-track and the row is
+     * a fossil - showing it as "listening now" is a lie the other person can see through.
+     */
+    val isNowPlayingLive: Boolean
+        get() {
+            if (spotifyIsPlaying != true) return false
+            val at = runCatching { java.time.Instant.parse(spotifyUpdatedAt) }.getOrNull()
+                ?: return false
+            return at.isAfter(java.time.Instant.now().minusSeconds(NOW_PLAYING_STALE_SECONDS))
+        }
+
     val hasNowPlaying: Boolean
-        get() = spotifyIsPlaying == true && !spotifyTrackName.isNullOrBlank()
+        get() = isNowPlayingLive && !spotifyTrackName.isNullOrBlank()
 }
 
 @Serializable
@@ -93,3 +106,6 @@ data class CoupleSnapshot(
     val primaryCountdown: Countdown?
         get() = countdowns.firstOrNull { it.isPrimary } ?: countdowns.minByOrNull { it.date }
 }
+
+/** Three missed heartbeats: generous enough for a doze, short enough to be honest. */
+private const val NOW_PLAYING_STALE_SECONDS = 200L
