@@ -191,7 +191,7 @@ private fun TogetherContent(snapshot: WidgetSnapshot) {
             Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
                 if (snapshot.weatherCode != null && snapshot.weatherTemp != null) {
                     Image(
-                        provider = ImageProvider(Wmo.iconRes(snapshot.weatherCode)),
+                        provider = ImageProvider(Wmo.iconRes(snapshot.weatherCode, snapshot.weatherIsDay)),
                         contentDescription = null,
                         colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(Scarlet)),
                         modifier = GlanceModifier.size(15.dp),

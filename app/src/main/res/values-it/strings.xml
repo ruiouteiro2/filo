@@ -283,4 +283,8 @@
     <string name="ping_write_hint">Due parole per lei</string>
     <string name="ping_send">Invia</string>
     <string name="widget_days_left">%1$s giorni — %2$s</string>
+    <string name="weather_clear_night">Notte serena</string>
+    <string name="weather_feels_like">Percepiti %1$s\u00B0</string>
+    <string name="weather_humidity">Umidit\u00E0 %1$d%%</string>
+    <string name="weather_wind">Vento %1$d km/h</string>
 </resources>

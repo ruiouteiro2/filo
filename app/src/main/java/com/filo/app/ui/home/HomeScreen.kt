@@ -197,26 +197,9 @@ fun HomeScreen(
                 )
             }
 
-            StaggeredEntrance(index = 1) {
-                CountdownCard(snapshot = snapshot, locale = locale, onOpenCountdowns = onOpenCountdowns)
-            }
+            StaggeredEntrance(index = 1) { PingCard(onPing = onPing) }
 
             StaggeredEntrance(index = 2) {
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    WeatherCard(weather = weather, modifier = Modifier.weight(1f))
-                    BatteryCard(partner = partner, modifier = Modifier.weight(1f))
-                }
-            }
-
-            StaggeredEntrance(index = 3) { DaysTogetherCard(snapshot = snapshot) }
-
-            StaggeredEntrance(index = 4) { DistanceCard(distance = distance, me = me, partner = partner) }
-
-            StaggeredEntrance(index = 5) {
-                MusicCard(partner = partner, me = me)
-            }
-
-            StaggeredEntrance(index = 6) {
                 PhotoCard(
                     onViewImage = { url, name -> viewing = url to name },
                     partner = partner,
@@ -226,15 +209,32 @@ fun HomeScreen(
                 )
             }
 
+            StaggeredEntrance(index = 3) {
+                CountdownCard(snapshot = snapshot, locale = locale, onOpenCountdowns = onOpenCountdowns)
+            }
+
+            StaggeredEntrance(index = 4) {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    WeatherCard(weather = weather, modifier = Modifier.weight(1f))
+                    BatteryCard(partner = partner, modifier = Modifier.weight(1f))
+                }
+            }
+
+            StaggeredEntrance(index = 5) { DaysTogetherCard(snapshot = snapshot) }
+
+            StaggeredEntrance(index = 6) { DistanceCard(distance = distance, me = me, partner = partner) }
+
             StaggeredEntrance(index = 7) {
+                MusicCard(partner = partner, me = me)
+            }
+
+            StaggeredEntrance(index = 8) {
                 BucketCard(
                     items = snapshot.bucket,
                     onToggle = onToggleBucket,
                     onOpenBucket = onOpenBucket,
                 )
             }
-
-            StaggeredEntrance(index = 8) { PingCard(onPing = onPing) }
 
             Spacer(Modifier.height(24.dp))
         }
@@ -584,58 +584,83 @@ private fun PhotoCard(
     FiloCard {
         SectionLabel(stringResource(R.string.label_photo))
         Spacer(Modifier.height(12.dp))
+
+        // Hers first, full size: this card exists to be looked at, not scanned past.
         if (theirPhoto != null) {
-            coil.compose.AsyncImage(
-                model = theirPhoto,
-                contentDescription = partner?.displayName,
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
-                    // Tap looks at it properly; holding it swaps YOURS, because that is the
-                    // only photo here you have any business replacing.
-                    .combinedClickable(
-                        onClick = { onViewImage(theirPhoto, partner?.displayName) },
-                        onLongClick = {
-                            picker.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                            )
-                        },
-                    ),
+            DailyPhoto(
+                url = theirPhoto,
+                name = partner?.displayName,
+                takenAt = partner?.dailyPhotoAt,
+                onClick = { onViewImage(theirPhoto, partner?.displayName) },
             )
-            DayMath.relative(PgTime.instant(partner?.dailyPhotoAt))?.let {
-                Spacer(Modifier.height(6.dp))
-                Timestamp(it.toString())
-            }
         } else {
             CardValue(stringResource(R.string.widget_no_photo))
         }
 
         Spacer(Modifier.height(14.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (minePhoto != null) {
-                coil.compose.AsyncImage(
-                    model = minePhoto,
-                    contentDescription = null,
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
-                        .clickable { onViewImage(minePhoto, null) },
-                )
-                Spacer(Modifier.width(12.dp))
-            }
-            Text(
-                text = stringResource(
-                    if (minePhoto != null) R.string.photo_replace_yours else R.string.photo_set_yours,
-                ),
-                style = FiloType.Label,
-                color = Crimson,
-                modifier = Modifier.clickable {
+
+        if (minePhoto != null) {
+            DailyPhoto(
+                url = minePhoto,
+                name = me?.displayName,
+                takenAt = me?.dailyPhotoAt,
+                onClick = { onViewImage(minePhoto, me?.displayName) },
+                onLongClick = {
                     picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 },
             )
+            Spacer(Modifier.height(6.dp))
+            Timestamp(stringResource(R.string.photo_replace_yours))
+        } else {
+            FiloSecondaryButton(
+                text = stringResource(R.string.photo_set_yours),
+                onClick = {
+                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
+            )
+        }
+    }
+}
+
+/** One day, one photo, shown big. Tap opens it full screen; holding yours replaces it. */
+@Composable
+private fun DailyPhoto(
+    url: String,
+    name: String?,
+    takenAt: String?,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+) {
+    Box {
+        coil.compose.AsyncImage(
+            model = url,
+            contentDescription = name,
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        )
+        // The name and when, resting on the picture the way the site sets captions.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(8.dp)
+                .background(
+                    Ink.copy(alpha = 0.55f),
+                    androidx.compose.foundation.shape.RoundedCornerShape(999.dp),
+                )
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+        ) {
+            name?.let {
+                Text(it, style = FiloType.Label, color = Bone)
+            }
+            DayMath.relative(PgTime.instant(takenAt))?.let {
+                if (name != null) Spacer(Modifier.width(8.dp))
+                Timestamp(it.toString())
+            }
         }
     }
 }
@@ -860,7 +885,7 @@ private fun WeatherCard(weather: Weather?, modifier: Modifier = Modifier) {
         } else {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(Wmo.iconRes(weather.code)),
+                    painter = painterResource(Wmo.iconRes(weather.code, weather.isDay)),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(Crimson),
                     modifier = Modifier.size(28.dp),
@@ -871,7 +896,22 @@ private fun WeatherCard(weather: Weather?, modifier: Modifier = Modifier) {
                 )
             }
             Spacer(Modifier.height(4.dp))
-            Text(stringResource(Wmo.descriptionRes(weather.code)), style = FiloType.Body, color = Ash)
+            Text(
+                stringResource(Wmo.descriptionRes(weather.code, weather.isDay)),
+                style = FiloType.Body,
+                color = Ash,
+            )
+            val details = listOfNotNull(
+                weather.feelsLikeC?.takeIf { it != weather.temperatureC }?.let {
+                    stringResource(R.string.weather_feels_like, DayMath.number(it.toLong()))
+                },
+                weather.humidity?.let { stringResource(R.string.weather_humidity, it) },
+                weather.windKmh?.let { stringResource(R.string.weather_wind, it) },
+            )
+            if (details.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Text(details.joinToString("  \u00B7  "), style = FiloType.Timestamp, color = Ash)
+            }
         }
     }
 }

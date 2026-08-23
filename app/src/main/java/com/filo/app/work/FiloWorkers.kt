@@ -162,6 +162,7 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
             photoImage = photo,
             fallbackWeatherCode = previous.weatherCode,
             fallbackWeatherTemp = previous.weatherTemp,
+            fallbackWeatherIsDay = previous.weatherIsDay,
         ),
     )
 }

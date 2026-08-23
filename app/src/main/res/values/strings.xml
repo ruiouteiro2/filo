@@ -283,4 +283,8 @@
     <string name="ping_write_hint">A few words for them</string>
     <string name="ping_send">Send</string>
     <string name="widget_days_left">%1$s days — %2$s</string>
+    <string name="weather_clear_night">Clear night</string>
+    <string name="weather_feels_like">Feels like %1$s\u00B0</string>
+    <string name="weather_humidity">%1$d%% humidity</string>
+    <string name="weather_wind">Wind %1$d km/h</string>
 </resources>

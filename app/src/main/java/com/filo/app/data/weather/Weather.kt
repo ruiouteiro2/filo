@@ -29,6 +29,11 @@ data class Weather(
     val fetchedAt: Long,
     val lat: Double,
     val lon: Double,
+    /** Defaults keep a cache written by an older version decodable. */
+    val isDay: Boolean = true,
+    val feelsLikeC: Int? = null,
+    val humidity: Int? = null,
+    val windKmh: Int? = null,
 )
 
 @Serializable
@@ -37,6 +42,10 @@ private data class OpenMeteoResponse(val current: Current) {
     data class Current(
         @SerialName("temperature_2m") val temperature: Double,
         @SerialName("weather_code") val weatherCode: Int,
+        @SerialName("is_day") val isDay: Int = 1,
+        @SerialName("apparent_temperature") val feelsLike: Double? = null,
+        @SerialName("relative_humidity_2m") val humidity: Int? = null,
+        @SerialName("wind_speed_10m") val windSpeed: Double? = null,
     )
 }
 
@@ -66,7 +75,8 @@ class WeatherRepository(private val context: Context) {
     private suspend fun fetch(lat: Double, lon: Double): Weather? = withContext(Dispatchers.IO) {
         runCatching {
             val url = "https://api.open-meteo.com/v1/forecast" +
-                "?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code"
+                "?latitude=$lat&longitude=$lon" +
+                "&current=temperature_2m,weather_code,is_day,apparent_temperature,relative_humidity_2m,wind_speed_10m"
             val body = http.get(url).bodyAsText()
             val parsed = json.decodeFromString(OpenMeteoResponse.serializer(), body)
             val weather = Weather(
@@ -75,6 +85,10 @@ class WeatherRepository(private val context: Context) {
                 fetchedAt = Instant.now().toEpochMilli(),
                 lat = lat,
                 lon = lon,
+                isDay = parsed.current.isDay == 1,
+                feelsLikeC = parsed.current.feelsLike?.roundToInt(),
+                humidity = parsed.current.humidity,
+                windKmh = parsed.current.windSpeed?.roundToInt(),
             )
             context.filoDataStore.edit { it[key] = json.encodeToString(Weather.serializer(), weather) }
             weather
@@ -95,8 +109,8 @@ private fun Weather.isFreshFor(lat: Double, lon: Double): Boolean {
 /** WMO code to our small icon set and a localised description. */
 object Wmo {
 
-    fun descriptionRes(code: Int): Int = when (code) {
-        0 -> R.string.weather_clear
+    fun descriptionRes(code: Int, isDay: Boolean = true): Int = when (code) {
+        0 -> if (isDay) R.string.weather_clear else R.string.weather_clear_night
         1 -> R.string.weather_mainly_clear
         2 -> R.string.weather_partly_cloudy
         3 -> R.string.weather_overcast
@@ -111,9 +125,14 @@ object Wmo {
         else -> R.string.weather_unknown
     }
 
-    fun iconRes(code: Int): Int = when (code) {
-        0 -> R.drawable.ic_weather_clear
-        1, 2 -> R.drawable.ic_weather_partly
+    /**
+     * Night gets its own sky. A sun over "her" card at midnight reads as broken even when
+     * the temperature is right, because the one thing everyone can check is whether it is
+     * dark outside.
+     */
+    fun iconRes(code: Int, isDay: Boolean = true): Int = when (code) {
+        0 -> if (isDay) R.drawable.ic_weather_clear else R.drawable.ic_weather_clear_night
+        1, 2 -> if (isDay) R.drawable.ic_weather_partly else R.drawable.ic_weather_partly_night
         3 -> R.drawable.ic_weather_cloud
         45, 48 -> R.drawable.ic_weather_fog
         51, 53, 55, 56, 57 -> R.drawable.ic_weather_drizzle

@@ -37,6 +37,7 @@ data class WidgetSnapshot(
     val partnerCharging: Boolean = false,
     val weatherCode: Int? = null,
     val weatherTemp: Int? = null,
+    val weatherIsDay: Boolean = true,
     val distanceKm: Long? = null,
     val distanceKnown: Boolean = false,
     val countdownLabelEn: String? = null,
@@ -119,6 +120,7 @@ object WidgetSnapshotStore {
         /** Last known weather, used when this round's fetch came back empty. */
         fallbackWeatherCode: Int? = null,
         fallbackWeatherTemp: Int? = null,
+        fallbackWeatherIsDay: Boolean = true,
     ): WidgetSnapshot {
         val partner = couple.partner
         val primary = couple.primaryCountdown
@@ -134,6 +136,7 @@ object WidgetSnapshotStore {
             partnerBattery = partner?.batteryLevel,
             partnerCharging = partner?.batteryCharging == true,
             weatherCode = weather?.code ?: fallbackWeatherCode,
+            weatherIsDay = weather?.isDay ?: fallbackWeatherIsDay,
             weatherTemp = weather?.temperatureC ?: fallbackWeatherTemp,
             distanceKm = (distance as? DistanceState.Known)?.km,
             distanceKnown = distance is DistanceState.Known,
