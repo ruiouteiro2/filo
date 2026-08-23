@@ -51,10 +51,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        com.filo.app.update.UpdateManager.appVisible = true
         // Spec 8: an immediate sync whenever the app is foregrounded, plus the periodic
         // worker that keeps the widgets alive while the app is closed.
         SyncWorker.schedule(this)
         lifecycleScope.launch { WidgetUpdater.updateAll(this@MainActivity) }
+    }
+
+    override fun onStop() {
+        com.filo.app.update.UpdateManager.appVisible = false
+        super.onStop()
     }
 }
 
@@ -132,7 +138,9 @@ private fun FiloRoot() {
                     onPickAvatar = vm::uploadAvatar,
                     onPickDailyPhoto = vm::uploadDailyPhoto,
                     onToggleBucket = vm::setBucketDone,
-                    updateAvailable = updateState is com.filo.app.update.UpdateManager.State.Available,
+                    updateAvailable = updateState is com.filo.app.update.UpdateManager.State.Available ||
+                        updateState is com.filo.app.update.UpdateManager.State.Downloading ||
+                        updateState is com.filo.app.update.UpdateManager.State.ReadyToInstall,
                     onOpenSettingsForUpdate = { navController.navigate(Routes.Settings) },
                     onPing = vm::sendPing,
                     onRefresh = vm::refresh,

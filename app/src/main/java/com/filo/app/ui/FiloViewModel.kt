@@ -99,11 +99,15 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
     val pendingAsk: StateFlow<PermissionAsk?> = _pendingAsk.asStateFlow()
 
     init {
+        // The update machinery must never gate startup: its answer is cosmetic at this
+        // moment, and a slow GitHub round trip was holding the whole app on a blank screen.
+        viewModelScope.launch {
+            UpdateManager.cleanUp(getApplication())
+            UpdateManager.check(getApplication())
+        }
         viewModelScope.launch {
             repo.ensureSignedIn()
             val state = prefs.currentPairing()
-            UpdateManager.cleanUp(getApplication())
-            UpdateManager.check(getApplication())
             if (state.isPaired) {
                 _startup.value = Startup.Paired
                 repo.loadCachedWeather()
@@ -210,7 +214,11 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
         val state = UpdateManager.download(getApplication(), release)
         if (state is UpdateManager.State.ReadyToInstall) {
             val app = getApplication<Application>()
-            if (UpdateManager.canInstall(app)) UpdateManager.install(app, state.file)
+            // From the background Android drops the installer intent on the floor without a
+            // word; leave ReadyToInstall standing and the Install button does the honours.
+            if (UpdateManager.canInstall(app) && UpdateManager.appVisible) {
+                UpdateManager.install(app, state.file)
+            }
         }
     }
 

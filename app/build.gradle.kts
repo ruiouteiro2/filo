@@ -45,8 +45,8 @@ android {
         applicationId = "com.filo.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.3.1"
 
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
@@ -74,11 +74,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = if (hasReleaseKeystore) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            // No keystore, no release. A debug-signed "release" would reach the phones
+            // as a signature mismatch and every self-update after it would silently fail.
+            signingConfig = if (hasReleaseKeystore) signingConfigs.getByName("release") else null
         }
         debug {
             applicationIdSuffix = ""
@@ -149,4 +147,14 @@ dependencies {
     implementation(libs.firebase.messaging)
 
     debugImplementation(libs.androidx.ui.tooling)
+}
+
+// Refuse to produce a release without the real signature - an unsigned or debug-signed
+// build is not a smaller release, it is a brick for the self-update chain.
+tasks.configureEach {
+    if ((name == "assembleRelease" || name == "bundleRelease") && !hasReleaseKeystore) {
+        doFirst {
+            throw GradleException("keystore.properties is missing - refusing to build an unsigned release")
+        }
+    }
 }
