@@ -47,6 +47,32 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent { FiloTheme { FiloRoot() } }
+        handleSpotifyExtras(intent)
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleSpotifyExtras(intent)
+    }
+
+    /**
+     * The widget's music line cannot open Spotify itself without risking a dead tap, so it
+     * launches us with the track in tow and we bounce straight out through SpotifyLink,
+     * which knows the app -> web fallback chain.
+     */
+    private fun handleSpotifyExtras(intent: android.content.Intent?) {
+        intent ?: return
+        val trackId = intent.getStringExtra(com.filo.app.widget.EXTRA_SPOTIFY_TRACK).orEmpty()
+        val title = intent.getStringExtra(com.filo.app.widget.EXTRA_SPOTIFY_TITLE).orEmpty()
+        val artist = intent.getStringExtra(com.filo.app.widget.EXTRA_SPOTIFY_ARTIST).orEmpty()
+        intent.removeExtra(com.filo.app.widget.EXTRA_SPOTIFY_TRACK)
+        intent.removeExtra(com.filo.app.widget.EXTRA_SPOTIFY_TITLE)
+        intent.removeExtra(com.filo.app.widget.EXTRA_SPOTIFY_ARTIST)
+        when {
+            trackId.isNotBlank() -> com.filo.app.spotify.SpotifyLink.openTrack(this, trackId)
+            title.isNotBlank() || artist.isNotBlank() ->
+                com.filo.app.spotify.SpotifyLink.openSearch(this, title, artist)
+        }
     }
 
     override fun onStart() {

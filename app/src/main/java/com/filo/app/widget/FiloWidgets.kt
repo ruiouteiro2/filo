@@ -56,6 +56,9 @@ private val Ember = Color(0xFFFF5966)
 private val RoseAsh = Color(0xFFE9BFC2)
 
 const val EXTRA_DESTINATION = "filo.destination"
+const val EXTRA_SPOTIFY_TRACK = "filo.spotify_track"
+const val EXTRA_SPOTIFY_TITLE = "filo.spotify_title"
+const val EXTRA_SPOTIFY_ARTIST = "filo.spotify_artist"
 
 /**
  * Widgets sit on unknown wallpapers, so every one of them gets its own opaque ground and a
@@ -151,6 +154,14 @@ private fun TogetherContent(snapshot: WidgetSnapshot) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
             // Who and when: their name, their clock ticking natively in their timezone.
             Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                WidgetImages.loadFile(snapshot.partnerAvatar)?.let { face ->
+                    Image(
+                        provider = ImageProvider(face),
+                        contentDescription = snapshot.partnerName,
+                        modifier = GlanceModifier.size(44.dp),
+                    )
+                    Spacer(GlanceModifier.width(10.dp))
+                }
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
                         text = snapshot.partnerName ?: context.getString(R.string.widget_no_data),
@@ -209,7 +220,21 @@ private fun TogetherContent(snapshot: WidgetSnapshot) {
             // What they are listening to, straight on the home screen.
             snapshot.partnerTrack?.let { track ->
                 Spacer(GlanceModifier.height(6.dp))
-                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.Vertical.CenterVertically,
+                    // Straight to the song: this line opens Spotify, not the app.
+                    modifier = GlanceModifier.clickable(
+                        actionStartActivity<MainActivity>(
+                            actionParametersOf(
+                                ActionParameters.Key<String>(EXTRA_SPOTIFY_TRACK) to
+                                    (snapshot.partnerTrackId ?: ""),
+                                ActionParameters.Key<String>(EXTRA_SPOTIFY_TITLE) to track,
+                                ActionParameters.Key<String>(EXTRA_SPOTIFY_ARTIST) to
+                                    (snapshot.partnerArtist ?: ""),
+                            ),
+                        ),
+                    ),
+                ) {
                     Text(
                         text = if (snapshot.partnerMusicPlaying) "\u266A" else "\u23F8",
                         style = TextStyle(color = ColorProvider(Scarlet), fontSize = 12.sp),

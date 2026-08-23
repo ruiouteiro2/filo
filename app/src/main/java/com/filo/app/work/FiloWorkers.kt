@@ -93,6 +93,7 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
     val locale = prefs.currentPairing().locale
     val clock24h = prefs.currentClock24h()
 
+    val avatar = WidgetImages.renderAvatar(context, photoUrls[partner?.photoUrl])
     val photo = WidgetImages.cachePhoto(context, photoUrls[partner?.dailyPhotoUrl])
 
     WidgetSnapshotStore.write(
@@ -103,6 +104,7 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
             distance = repository.distanceState(),
             locale = locale,
             clock24h = clock24h,
+            avatarImage = avatar,
             photoImage = photo,
         ),
     )

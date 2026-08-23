@@ -46,87 +46,46 @@ object WidgetImages {
         File(context.filesDir, DIR).apply { if (!exists()) mkdirs() }
 
     /**
-     * The day ring with the partner's face in the middle, drawn with plain Android graphics
-     * so it matches the in-app Compose version.
+     * The partner's face for the widget: circle cropped with the site's scarlet hairline,
+     * rendered to a file because Glance wants bitmaps it can reload after process death.
      */
-    suspend fun renderDayRing(
-        context: Context,
-        avatarUrl: String?,
-        nowLocal: LocalTime?,
-        sleepStart: LocalTime?,
-        sleepEnd: LocalTime?,
-    ): String? = withContext(Dispatchers.IO) {
+    suspend fun renderAvatar(context: Context, avatarUrl: String?): String? = withContext(Dispatchers.IO) {
+        if (avatarUrl.isNullOrBlank()) return@withContext null
+        val face = runCatching { loadBitmap(avatarUrl) }.getOrNull() ?: return@withContext null
         runCatching {
             val size = RING_PX
             val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            val stroke = size * 0.075f
-            val inset = stroke / 2f
-            val rect = RectF(inset, inset, size - inset, size - inset)
-
-            val (wakeStart, wakeSpan) = SleepMath.wakingSpan(sleepStart, sleepEnd)
-            val noon = noonPosition(wakeStart, wakeSpan)
-
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                style = Paint.Style.STROKE
-                strokeWidth = stroke
-            }
-            val segments = 180
-            val degreesPer = 360f / segments
-            for (i in 0 until segments) {
-                val midMinute = (((i + 0.5f) / segments) * SleepMath.MINUTES_PER_DAY).toInt()
-                val asleep = SleepMath.isAsleep(
-                    LocalTime.of((midMinute / 60) % 24, midMinute % 60),
-                    sleepStart,
-                    sleepEnd,
-                ) ?: false
-                paint.color = if (asleep) INK else wakingColor(midMinute, wakeStart, wakeSpan, noon)
-                canvas.drawArc(rect, -90f + i * degreesPer, degreesPer + 0.6f, false, paint)
-            }
-
-            // Face in the middle, circular cropped.
-            val faceRadius = size / 2f - stroke * 1.6f
-            val face = avatarUrl?.let { loadBitmap(it) }
-            if (face != null) {
-                val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-                val shader = BitmapShader(face, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-                val scale = (faceRadius * 2f) / min(face.width, face.height)
-                val matrix = Matrix().apply {
-                    setScale(scale, scale)
-                    postTranslate(
-                        size / 2f - face.width * scale / 2f,
-                        size / 2f - face.height * scale / 2f,
-                    )
-                }
-                shader.setLocalMatrix(matrix)
-                fill.shader = shader
-                canvas.drawCircle(size / 2f, size / 2f, faceRadius, fill)
-                face.recycle()
-            } else {
-                canvas.drawCircle(
-                    size / 2f,
-                    size / 2f,
-                    faceRadius,
-                    Paint(Paint.ANTI_ALIAS_FLAG).apply { color = INK },
+            val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+            val shader = BitmapShader(face, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+            val scale = size.toFloat() / min(face.width, face.height)
+            val matrix = Matrix().apply {
+                setScale(scale, scale)
+                postTranslate(
+                    size / 2f - face.width * scale / 2f,
+                    size / 2f - face.height * scale / 2f,
                 )
             }
-
-            // The dot at their current local time.
-            if (nowLocal != null) {
-                val minute = nowLocal.hour * 60 + nowLocal.minute
-                val degrees = -90f + (minute / SleepMath.MINUTES_PER_DAY.toFloat()) * 360f
-                val radians = Math.toRadians(degrees.toDouble())
-                val cx = size / 2f + (size / 2f - inset) * cos(radians).toFloat()
-                val cy = size / 2f + (size / 2f - inset) * sin(radians).toFloat()
-                canvas.drawCircle(cx, cy, stroke * 0.72f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = INK })
-                canvas.drawCircle(cx, cy, stroke * 0.46f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = BONE })
-            }
-
-            val file = File(dir(context), "ring.png")
+            shader.setLocalMatrix(matrix)
+            fill.shader = shader
+            val radius = size / 2f - size * 0.02f
+            canvas.drawCircle(size / 2f, size / 2f, radius, fill)
+            canvas.drawCircle(
+                size / 2f,
+                size / 2f,
+                radius,
+                Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    style = Paint.Style.STROKE
+                    strokeWidth = size * 0.014f
+                    color = 0x66E63946.toInt()
+                },
+            )
+            face.recycle()
+            val file = File(dir(context), "avatar.png")
             file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
             bitmap.recycle()
             file.absolutePath
-        }.onFailure { Log.w(TAG, "ring render failed", it) }.getOrNull()
+        }.onFailure { Log.w(TAG, "avatar render failed", it) }.getOrNull()
     }
 
     /** Downloads the partner's photo once and keeps a widget sized copy on disk. */

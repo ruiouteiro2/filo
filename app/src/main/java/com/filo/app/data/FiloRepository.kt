@@ -520,6 +520,7 @@ class FiloRepository(private val context: Context) {
      */
     private val _photoUrls = MutableStateFlow<Map<String, String>>(emptyMap())
     val photoUrls: StateFlow<Map<String, String>> = _photoUrls.asStateFlow()
+    private val photoSignedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
 
     suspend fun uploadAvatar(uri: Uri): Boolean = uploadPhoto(uri, "avatar") { path -> setAvatar(path) }
 
@@ -534,13 +535,23 @@ class FiloRepository(private val context: Context) {
         val coupleId = prefs.currentPairing().coupleId ?: return@withContext false
         val uid = currentUserId() ?: return@withContext false
         val bytes = ImageTools.prepareForUpload(context, uri) ?: return@withContext false
-        // A stable name per person per kind, so old uploads do not pile up in the bucket.
-        val path = "$coupleId/$kind-$uid.jpg"
+        // A versioned name per upload: a fresh path means a fresh URL everywhere, so every
+        // cache (Coil's included) naturally shows the new photo without ever being told.
+        val previous = when (kind) {
+            "avatar" -> _snapshot.value.me?.photoUrl
+            else -> _snapshot.value.me?.dailyPhotoUrl
+        }
+        val path = "$coupleId/$kind-$uid-${System.currentTimeMillis()}.jpg"
         runCatching {
             client.storage.from(PHOTO_BUCKET).upload(path, bytes) { upsert = true }
             persist(path)
-            refreshPhotoUrls()
             refresh()
+            refreshPhotoUrls()
+            // The replaced file is garbage now; losing this delete only costs bucket bytes.
+            if (!previous.isNullOrBlank() && previous != path) {
+                runCatching { client.storage.from(PHOTO_BUCKET).delete(listOf(previous)) }
+                    .onFailure { Log.i(TAG, "old photo not deleted", it) }
+            }
         }.onFailure { Log.w(TAG, "photo upload failed", it) }.isSuccess
     }
 
@@ -556,15 +567,24 @@ class FiloRepository(private val context: Context) {
 
         if (paths.isEmpty()) {
             _photoUrls.value = emptyMap()
+            photoSignedAt.clear()
             return@withContext
         }
-        val resolved = paths.mapNotNull { path ->
+        // A signed URL that has not changed is a photo that does not flicker: only paths we
+        // have never signed, or whose URL is old enough to be nearing expiry, get a new one.
+        val now = System.currentTimeMillis()
+        val due = paths.filter { path ->
+            _photoUrls.value[path] == null || now - (photoSignedAt[path] ?: 0L) > RESIGN_AFTER_MS
+        }
+        if (due.isEmpty()) return@withContext
+        val resolved = due.mapNotNull { path ->
             runCatching {
                 path to client.storage.from(PHOTO_BUCKET).createSignedUrl(path, SIGNED_URL_TTL)
             }.onFailure { Log.w(TAG, "signing $path failed", it) }.getOrNull()
         }.toMap()
-        if (resolved.size != paths.size) {
-            Log.w(TAG, "signed ${resolved.size} of ${paths.size} photo paths")
+        resolved.keys.forEach { photoSignedAt[it] = now }
+        if (resolved.size != due.size) {
+            Log.w(TAG, "signed ${resolved.size} of ${due.size} photo paths")
         }
         // Merge rather than replace, so one transient failure does not blank a photo that
         // was already on screen.
@@ -710,5 +730,7 @@ class FiloRepository(private val context: Context) {
         const val MOOD_MAX = 40
         const val LIVE_WRITE_INTERVAL_MS = 60_000L
         val SIGNED_URL_TTL: kotlin.time.Duration = kotlin.time.Duration.parse("7d")
+        /** Re-sign well before the URL dies, and not a sync sooner. */
+        const val RESIGN_AFTER_MS = 3L * 24 * 60 * 60 * 1000
     }
 }

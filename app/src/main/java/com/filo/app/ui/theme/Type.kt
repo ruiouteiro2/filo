@@ -23,8 +23,8 @@ val Cormorant = FontFamily(
 )
 
 object FiloType {
-    /** Big numerals: high contrast serif, like the site's display numbers. */
-    val Numeral = TextStyle(fontFamily = Cormorant, fontWeight = FontWeight.Bold, fontSize = 62.sp, lineHeight = 64.sp)
+    /** Big numerals: the clean sans - the serif digits read as antique, not romantic. */
+    val Numeral = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 56.sp, lineHeight = 60.sp)
     val Title = TextStyle(fontFamily = Cormorant, fontWeight = FontWeight.SemiBold, fontSize = 34.sp, lineHeight = 40.sp)
     val TitleItalic = TextStyle(fontFamily = Cormorant, fontWeight = FontWeight.Medium, fontStyle = FontStyle.Italic, fontSize = 24.sp, lineHeight = 30.sp)
     val Value = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 19.sp, lineHeight = 25.sp)
@@ -32,8 +32,8 @@ object FiloType {
     val Label = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 15.sp, letterSpacing = 0.14.em)
     val Timestamp = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 11.sp, lineHeight = 15.sp, letterSpacing = 0.03.em)
 
-    /** Clocks: serif like the site's display numbers, big enough to be the point. */
-    val Mono = TextStyle(fontFamily = Cormorant, fontWeight = FontWeight.Bold, fontSize = 30.sp, letterSpacing = 0.02.em)
+    /** Clocks: sans digits, big enough to be the point. */
+    val Mono = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 27.sp, letterSpacing = 0.02.em)
 }
 
 internal val FiloTypography = Typography(

@@ -39,8 +39,10 @@ data class WidgetSnapshot(
     val countdownEmoji: String? = null,
     val partnerTrack: String? = null,
     val partnerArtist: String? = null,
+    val partnerTrackId: String? = null,
     val partnerMusicPlaying: Boolean = false,
-    /** File under the app's own storage, written by the worker. */
+    /** Files under the app's own storage, written by the worker. */
+    val partnerAvatar: String? = null,
     val photoImage: String? = null,
     val locale: String = "en",
     val clock24h: Boolean = true,
@@ -72,6 +74,7 @@ object WidgetSnapshotStore {
         distance: DistanceState,
         locale: String,
         clock24h: Boolean,
+        avatarImage: String?,
         photoImage: String?,
     ): WidgetSnapshot {
         val partner = couple.partner
@@ -104,7 +107,9 @@ object WidgetSnapshotStore {
             countdownEmoji = primary?.emoji?.takeIf { it.isNotBlank() },
             partnerTrack = partner?.spotifyTrackName?.takeIf { it.isNotBlank() },
             partnerArtist = partner?.spotifyArtist?.takeIf { it.isNotBlank() },
+            partnerTrackId = partner?.spotifyTrackId?.takeIf { it.isNotBlank() },
             partnerMusicPlaying = partner?.spotifyIsPlaying == true,
+            partnerAvatar = avatarImage,
             photoImage = photoImage,
             locale = locale,
             clock24h = clock24h,
