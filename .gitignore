@@ -20,9 +20,15 @@ keystore/
 *.jks
 *.keystore
 
-# Firebase config and the FCM service account private key
+# Firebase config and the FCM service account private key.
+# Firebase names the downloaded key like
+#   filo-1234-firebase-adminsdk-ab1cd-0123456789.json
+# so match that shape too, not just the word "service-account".
 google-services.json
 *service-account*.json
+*firebase-adminsdk*.json
+*-adminsdk-*.json
+serviceAccount*.json
 
 # Local Supabase stack state, which holds generated dev secrets
 supabase/.temp/
