@@ -14,6 +14,7 @@ import com.filo.app.FiloApp
 import com.filo.app.MainActivity
 import com.filo.app.R
 import com.filo.app.data.FiloRepository
+import com.filo.app.work.SyncWorker
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -49,20 +50,10 @@ class FiloMessagingService : FirebaseMessagingService() {
         // Nothing is displayed; we just sync and repaint, which is what makes the widgets
         // feel live instead of "whatever the half-hour worker last saw".
         if (message.data["type"] == "sync") {
-            scope.launch {
-                runCatching {
-                    val app = applicationContext
-                    val repository = (app as? FiloApp)?.repository ?: FiloRepository(app)
-                    repository.syncEverything(readLocation = false)
-                    repository.refreshPhotoUrls()
-                    com.filo.app.work.writeSnapshot(
-                        app,
-                        repository,
-                        com.filo.app.core.prefs.FiloPrefs(app),
-                    )
-                    com.filo.app.widget.WidgetUpdater.updateAll(app)
-                }.onFailure { Log.w(TAG, "sync push failed", it) }
-            }
+            // Handed to WorkManager rather than a coroutine on this service: the process can
+            // be killed the moment this method returns, and a half finished sync is how a
+            // widget ends up showing yesterday. The worker survives that and retries.
+            SyncWorker.runNow(applicationContext)
             return
         }
 

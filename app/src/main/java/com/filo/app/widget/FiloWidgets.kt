@@ -3,6 +3,8 @@ package com.filo.app.widget
 import android.content.Context
 import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -141,8 +143,13 @@ class TogetherWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val snapshot = WidgetSnapshotStore.read(context)
-        provideContent { TogetherContent(snapshot) }
+        // Collected inside the composition on purpose: a value read once out here would be
+        // frozen for the whole Glance session, and the widget would ignore every update.
+        provideContent {
+            val snapshot by WidgetSnapshotStore.flow(context)
+                .collectAsState(initial = null)
+            snapshot?.let { TogetherContent(it) }
+        }
     }
 }
 
@@ -168,7 +175,7 @@ private fun TogetherContent(snapshot: WidgetSnapshot) {
                         style = TextStyle(color = ColorProvider(Bone), fontSize = 15.sp, fontWeight = FontWeight.Bold),
                     )
                     Body(
-                        when (snapshot.partnerAsleep) {
+                        when (snapshot.partnerAsleep()) {
                             true -> context.getString(R.string.state_asleep)
                             false -> context.getString(R.string.state_awake)
                             null -> context.getString(R.string.state_unknown)
@@ -211,6 +218,29 @@ private fun TogetherContent(snapshot: WidgetSnapshot) {
                 }
             }
 
+            // The next visit, counted at render time so the number is right at midnight too.
+            PgTime.localDate(snapshot.countdownDate)?.let { date ->
+                DayMath.countdownNumeral(date)?.let { numeral ->
+                    Spacer(GlanceModifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                        Text(
+                            text = (snapshot.countdownEmoji ?: "✈"),
+                            style = TextStyle(fontSize = 12.sp),
+                        )
+                        Spacer(GlanceModifier.width(5.dp))
+                        Text(
+                            text = context.getString(
+                                R.string.widget_days_left,
+                                numeral,
+                                snapshot.countdownLabel() ?: context.getString(R.string.label_next_visit),
+                            ),
+                            style = TextStyle(color = ColorProvider(Bone), fontSize = 12.sp),
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+
             // Their mood, if they have one out.
             snapshot.partnerMoodEmoji?.let { emoji ->
                 Spacer(GlanceModifier.height(6.dp))
@@ -236,7 +266,7 @@ private fun TogetherContent(snapshot: WidgetSnapshot) {
                     ),
                 ) {
                     Text(
-                        text = if (snapshot.partnerMusicPlaying) "\u266A" else "\u23F8",
+                        text = if (snapshot.partnerMusicLive()) "\u266A" else "\u23F8",
                         style = TextStyle(color = ColorProvider(Scarlet), fontSize = 12.sp),
                     )
                     Spacer(GlanceModifier.width(5.dp))
@@ -261,8 +291,13 @@ class CountdownWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val snapshot = WidgetSnapshotStore.read(context)
-        provideContent { CountdownContent(snapshot) }
+        // Collected inside the composition on purpose: a value read once out here would be
+        // frozen for the whole Glance session, and the widget would ignore every update.
+        provideContent {
+            val snapshot by WidgetSnapshotStore.flow(context)
+                .collectAsState(initial = null)
+            snapshot?.let { CountdownContent(it) }
+        }
     }
 }
 
@@ -317,8 +352,10 @@ class HeartWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val justSent = PingState.recentlySent(context)
-        provideContent { HeartContent(justSent) }
+        provideContent {
+            val justSent by PingState.recentlySentFlow(context).collectAsState(initial = false)
+            HeartContent(justSent)
+        }
     }
 }
 
@@ -366,8 +403,13 @@ class PhotoWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val snapshot = WidgetSnapshotStore.read(context)
-        provideContent { PhotoContent(snapshot) }
+        // Collected inside the composition on purpose: a value read once out here would be
+        // frozen for the whole Glance session, and the widget would ignore every update.
+        provideContent {
+            val snapshot by WidgetSnapshotStore.flow(context)
+                .collectAsState(initial = null)
+            snapshot?.let { PhotoContent(it) }
+        }
     }
 }
 

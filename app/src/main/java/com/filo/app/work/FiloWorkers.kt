@@ -5,6 +5,9 @@ import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -15,6 +18,7 @@ import com.filo.app.core.time.PgTime
 import com.filo.app.data.FiloRepository
 import com.filo.app.widget.HeartWidget
 import com.filo.app.widget.WidgetImages
+import com.filo.app.widget.MUSIC_STALE_MS
 import com.filo.app.widget.WidgetSnapshotStore
 import com.filo.app.widget.WidgetUpdater
 import androidx.glance.appwidget.updateAll
@@ -22,6 +26,9 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "FiloWorker"
+
+/** Long enough for Glance to finish drawing before the process may be reclaimed. */
+private const val GLANCE_SETTLE_MS = 2_500L
 
 /**
  * The real update cadence for the widgets. updatePeriodMillis in the provider XML is what
@@ -44,6 +51,10 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             repository.refreshPhotoUrls()
             writeSnapshot(app, repository, prefs)
             WidgetUpdater.updateAll(app)
+            // Glance recomposes in a session of its own. Returning straight away lets the
+            // process be reclaimed mid-recomposition, and the widget keeps the old picture
+            // even though the snapshot underneath it is already correct.
+            kotlinx.coroutines.delay(GLANCE_SETTLE_MS)
             Result.success()
         } catch (e: Exception) {
             Log.w(TAG, "sync worker failed", e)
@@ -53,10 +64,30 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
 
     companion object {
         const val NAME = "filo-sync"
+        private const val NOW = "filo-sync-now"
 
-        /** 30 minutes is the floor WorkManager will honour for periodic work. */
+        /**
+         * One sync, as soon as the system will allow it. Used by the silent push the other
+         * phone sends when something the widgets show has changed.
+         */
+        fun runNow(context: Context) {
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                NOW,
+                // APPEND, not REPLACE: replacing cancelled a sync that was halfway through
+                // and threw the cancellation into the repository for nothing.
+                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                OneTimeWorkRequestBuilder<SyncWorker>()
+                    .setConstraints(
+                        Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
+                    )
+                    .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                    .build(),
+            )
+        }
+
+        /** 15 minutes is the floor WorkManager will honour for periodic work. */
         fun schedule(context: Context) {
-            val request = PeriodicWorkRequestBuilder<SyncWorker>(30, TimeUnit.MINUTES)
+            val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
                 .setConstraints(
                     Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
                 )
@@ -110,6 +141,15 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
     val photo = WidgetImages.cachePhoto(context, photoUrls[partner?.dailyPhotoUrl])
         ?: previous.photoImage?.takeIf { java.io.File(it).exists() }
 
+    // A widget showing "playing" is only right until the heartbeat window closes. Book the
+    // repaint that will quietly turn it into "last played" so nobody has to open the app
+    // for the home screen to stop lying.
+    // Only while the claim is still live: booking this for a row that has already gone
+    // stale just wakes the phone again five seconds later, forever.
+    if (partner?.isNowPlayingLive == true) {
+        MusicExpiryWorker.schedule(context, partner.spotifyUpdatedAt)
+    }
+
     WidgetSnapshotStore.write(
         context,
         WidgetSnapshotStore.build(
@@ -124,4 +164,45 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
             fallbackWeatherTemp = previous.weatherTemp,
         ),
     )
+}
+
+/**
+ * Repaints the widgets once the partner's now-playing has gone stale. Without it a widget
+ * would keep the last "playing" line on screen until something else happened to refresh it,
+ * which on a quiet evening can be half an hour.
+ */
+class MusicExpiryWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result {
+        val app = applicationContext
+        val repository = (app as? FiloApp)?.repository ?: FiloRepository(app)
+        val prefs = FiloPrefs(app)
+        return runCatching {
+            // Re-read rather than trust the alarm: they may well have started something new.
+            repository.refresh()
+            writeSnapshot(app, repository, prefs)
+            WidgetUpdater.updateAll(app)
+            kotlinx.coroutines.delay(GLANCE_SETTLE_MS)
+            Result.success()
+        }.getOrElse {
+            Log.w(TAG, "music expiry repaint failed", it)
+            Result.success()
+        }
+    }
+
+    companion object {
+        const val NAME = "filo-music-expiry"
+
+        fun schedule(context: Context, updatedAt: String?) {
+            val at = PgTime.instant(updatedAt)?.toEpochMilli() ?: System.currentTimeMillis()
+            val due = at + MUSIC_STALE_MS - System.currentTimeMillis()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                NAME,
+                ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<MusicExpiryWorker>()
+                    .setInitialDelay(due.coerceAtLeast(5_000L), TimeUnit.MILLISECONDS)
+                    .build(),
+            )
+        }
+    }
 }

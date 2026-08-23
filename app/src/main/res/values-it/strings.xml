@@ -282,4 +282,5 @@
     <string name="ping_write">Dille qualcosa</string>
     <string name="ping_write_hint">Due parole per lei</string>
     <string name="ping_send">Invia</string>
+    <string name="widget_days_left">%1$s giorni — %2$s</string>
 </resources>

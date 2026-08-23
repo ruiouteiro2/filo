@@ -78,6 +78,9 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         com.filo.app.update.UpdateManager.appVisible = true
+        // An app update unbinds the now-playing listener without telling anyone, so every
+        // launch asks for it back. Free and idempotent when it is already bound.
+        com.filo.app.nowplaying.NotificationAccess.requestRebind(this)
         // Spec 8: an immediate sync whenever the app is foregrounded, plus the periodic
         // worker that keeps the widgets alive while the app is closed.
         SyncWorker.schedule(this)
@@ -135,8 +138,14 @@ private fun FiloRoot() {
             androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     when (event) {
-                        androidx.lifecycle.Lifecycle.Event.ON_START -> vm.startLiveLocation()
-                        androidx.lifecycle.Lifecycle.Event.ON_STOP -> vm.stopLiveLocation()
+                        androidx.lifecycle.Lifecycle.Event.ON_START -> {
+                            vm.startLiveLocation()
+                            vm.startNowPlayingWatch()
+                        }
+                        androidx.lifecycle.Lifecycle.Event.ON_STOP -> {
+                            vm.stopLiveLocation()
+                            vm.stopNowPlayingWatch()
+                        }
                         else -> Unit
                     }
                 }
@@ -144,6 +153,7 @@ private fun FiloRoot() {
                 onDispose {
                     lifecycleOwner.lifecycle.removeObserver(observer)
                     vm.stopLiveLocation()
+                    vm.stopNowPlayingWatch()
                 }
             }
             NavHost(navController = navController, startDestination = Routes.Home) {

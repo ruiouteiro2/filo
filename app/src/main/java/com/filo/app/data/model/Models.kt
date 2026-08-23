@@ -54,8 +54,9 @@ data class Member(
     val isNowPlayingLive: Boolean
         get() {
             if (spotifyIsPlaying != true) return false
-            val at = runCatching { java.time.Instant.parse(spotifyUpdatedAt) }.getOrNull()
-                ?: return false
+            // PgTime, never Instant.parse: Postgres hands back "+00:00" and the bare
+            // parser only accepts "Z", so this silently read as "never live" on the phones.
+            val at = com.filo.app.core.time.PgTime.instant(spotifyUpdatedAt) ?: return false
             return at.isAfter(java.time.Instant.now().minusSeconds(NOW_PLAYING_STALE_SECONDS))
         }
 

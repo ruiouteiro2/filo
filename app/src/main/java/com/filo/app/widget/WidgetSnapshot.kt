@@ -10,6 +10,7 @@ import com.filo.app.core.time.SleepMath
 import com.filo.app.data.model.CoupleSnapshot
 import com.filo.app.data.weather.Weather
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.Instant
@@ -23,7 +24,12 @@ data class WidgetSnapshot(
     val paired: Boolean = false,
     val partnerName: String? = null,
     val partnerTimezone: String? = null,
-    val partnerAsleep: Boolean? = null,
+    /**
+     * The window itself, not a verdict about it. Falling asleep changes no database row, so
+     * a stored "awake" had nothing to correct it and could stand all night.
+     */
+    val partnerSleepStart: String? = null,
+    val partnerSleepEnd: String? = null,
     val partnerMoodEmoji: String? = null,
     val partnerMoodText: String? = null,
     val partnerNote: String? = null,
@@ -40,7 +46,13 @@ data class WidgetSnapshot(
     val partnerTrack: String? = null,
     val partnerArtist: String? = null,
     val partnerTrackId: String? = null,
+    /**
+     * What the row claimed and when it was written. The verdict is deliberately NOT stored:
+     * "is playing" decays with time, and a boolean frozen at write time is exactly how the
+     * widget ended up insisting someone was still listening long after they had stopped.
+     */
     val partnerMusicPlaying: Boolean = false,
+    val partnerMusicAt: Long = 0L,
     /** Files under the app's own storage, written by the worker. */
     val partnerAvatar: String? = null,
     val photoImage: String? = null,
@@ -49,11 +61,39 @@ data class WidgetSnapshot(
     val updatedAt: Long = 0L,
 ) {
     fun countdownLabel(): String? = if (locale == "it") countdownLabelIt else countdownLabelEn
+
+    /**
+     * Judged now, at render time, exactly as the app judges it. The phone that is playing
+     * writes a heartbeat every minute; silence for longer than this means the music stopped
+     * with nobody left to say so.
+     */
+    /** Asked now, the way the app asks it, rather than remembered from a past sync. */
+    fun partnerAsleep(): Boolean? = SleepMath.isAsleep(
+        Instant.now().atZone(PgTime.zone(partnerTimezone)).toLocalTime(),
+        PgTime.localTime(partnerSleepStart),
+        PgTime.localTime(partnerSleepEnd),
+    )
+
+    fun partnerMusicLive(now: Long = System.currentTimeMillis()): Boolean =
+        partnerMusicPlaying && partnerMusicAt > 0L && now - partnerMusicAt < MUSIC_STALE_MS
 }
 
 object WidgetSnapshotStore {
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+
+    /**
+     * The snapshot as a Flow, for the widgets themselves. A Glance session lives on between
+     * updates and recomposes with whatever values the composition holds - a one-shot read
+     * frozen at session start is exactly why the widgets kept old data while the app moved
+     * on. Collected in composition, every DataStore write recomposes the widget by itself.
+     */
+    fun flow(context: Context): kotlinx.coroutines.flow.Flow<WidgetSnapshot> =
+        context.filoDataStore.data.map { prefs ->
+            prefs[PrefKeys.WidgetSnapshot]?.let { raw ->
+                runCatching { json.decodeFromString(WidgetSnapshot.serializer(), raw) }.getOrNull()
+            } ?: WidgetSnapshot()
+        }
 
     suspend fun read(context: Context): WidgetSnapshot {
         val raw = context.filoDataStore.data.first()[PrefKeys.WidgetSnapshot] ?: return WidgetSnapshot()
@@ -81,20 +121,13 @@ object WidgetSnapshotStore {
         fallbackWeatherTemp: Int? = null,
     ): WidgetSnapshot {
         val partner = couple.partner
-        val zone = PgTime.zone(partner?.timezone)
-        val asleep = partner?.let {
-            SleepMath.isAsleep(
-                Instant.now().atZone(zone).toLocalTime(),
-                PgTime.localTime(it.sleepStart),
-                PgTime.localTime(it.sleepEnd),
-            )
-        }
         val primary = couple.primaryCountdown
         return WidgetSnapshot(
             paired = couple.me != null,
             partnerName = partner?.displayName,
             partnerTimezone = partner?.timezone,
-            partnerAsleep = asleep,
+            partnerSleepStart = partner?.sleepStart,
+            partnerSleepEnd = partner?.sleepEnd,
             partnerMoodEmoji = partner?.moodEmoji?.takeIf { it.isNotBlank() },
             partnerMoodText = partner?.moodText?.takeIf { it.isNotBlank() },
             partnerNote = partner?.noteText?.takeIf { it.isNotBlank() },
@@ -111,7 +144,8 @@ object WidgetSnapshotStore {
             partnerTrack = partner?.spotifyTrackName?.takeIf { it.isNotBlank() },
             partnerArtist = partner?.spotifyArtist?.takeIf { it.isNotBlank() },
             partnerTrackId = partner?.spotifyTrackId?.takeIf { it.isNotBlank() },
-            partnerMusicPlaying = partner?.isNowPlayingLive == true,
+            partnerMusicPlaying = partner?.spotifyIsPlaying == true,
+            partnerMusicAt = PgTime.instant(partner?.spotifyUpdatedAt)?.toEpochMilli() ?: 0L,
             partnerAvatar = avatarImage,
             photoImage = photoImage,
             locale = locale,
@@ -120,3 +154,6 @@ object WidgetSnapshotStore {
         )
     }
 }
+
+/** Three missed heartbeats, the same window the app uses. */
+const val MUSIC_STALE_MS = 200_000L

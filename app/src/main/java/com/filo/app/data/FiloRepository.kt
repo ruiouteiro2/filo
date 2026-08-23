@@ -19,6 +19,7 @@ import com.filo.app.data.model.Member
 import com.filo.app.data.model.PairResult
 import com.filo.app.data.net.FiloSupabase
 import com.filo.app.nowplaying.NotificationAccess
+import com.filo.app.nowplaying.NowPlayingReader
 import com.filo.app.spotify.SpotifyApi
 import com.filo.app.spotify.SpotifyAuth
 import com.filo.app.data.weather.Weather
@@ -310,6 +311,9 @@ class FiloRepository(private val context: Context) {
         }
         if (ok) refresh()
         return ok
+        // Distance is on the widgets too, and nothing else would repaint them
+        // while the app is closed.
+        onRemoteChange?.invoke()
     }
 
     suspend fun setLocationLive(live: Boolean): Boolean = updateMe { set("location_is_live", live) }
@@ -389,6 +393,33 @@ class FiloRepository(private val context: Context) {
      */
     suspend fun touchNowPlaying(): Boolean = updateMe {
         set("spotify_updated_at", Instant.now().toString())
+    }
+
+    /**
+     * Reads this phone's media session and writes whatever it finds. Quiet when nothing has
+     * changed, so a sync every few minutes costs one comparison rather than a write.
+     */
+    suspend fun publishCurrentSession(heartbeat: Boolean = true): Boolean {
+        val current = NowPlayingReader.readNow(context)
+        val mine = _snapshot.value.me
+        return when {
+            current == null -> {
+                // Nothing playing at all. Only correct the row if it still claims otherwise.
+                if (mine?.spotifyIsPlaying == true) setNowPlayingStopped() else false
+            }
+            // Same track, same state: a heartbeat is all the record needs.
+            mine?.spotifyTrackName == current.title &&
+                mine.spotifyArtist == current.artist &&
+                mine.spotifyIsPlaying == current.isPlaying ->
+                if (heartbeat && current.isPlaying) touchNowPlaying() else false
+            else -> publishLocalNowPlaying(
+                trackId = current.trackId,
+                title = current.title,
+                artist = current.artist,
+                artUrl = current.artUrl,
+                isPlaying = current.isPlaying,
+            )
+        }
     }
 
     /** Playback stopped: keep what it was, just stop calling it live. */
@@ -648,7 +679,12 @@ class FiloRepository(private val context: Context) {
 
         // One writer only. When the phone is reporting what is playing, the Web API poll
         // would just overwrite fresher data with something up to 30 minutes old.
-        if (!NotificationAccess.isGranted(context)) {
+        if (NotificationAccess.isGranted(context)) {
+            // Belt and braces for the listener service: it pushes changes the instant they
+            // happen, but Android unbinds it on every app update and does not always say so.
+            // Reading the session here means a sync always corrects the record.
+            runCatching { publishCurrentSession() }
+        } else {
             runCatching { publishNowPlaying() }
         }
 

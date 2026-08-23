@@ -22,6 +22,19 @@ object NotificationAccess {
     fun component(context: Context): ComponentName =
         ComponentName(context.applicationContext, NowPlayingListenerService::class.java)
 
+    /**
+     * Android drops the binding to a notification listener whenever its app is replaced, and
+     * does not reliably restore it. The symptom is the whole feature going quiet after an
+     * update with the permission still switched on, so every launch asks for it back.
+     */
+    fun requestRebind(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return
+        if (!isGranted(context)) return
+        runCatching {
+            android.service.notification.NotificationListenerService.requestRebind(component(context))
+        }.onFailure { Log.i(TAG, "rebind request refused", it) }
+    }
+
     fun isGranted(context: Context): Boolean {
         val component = component(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {

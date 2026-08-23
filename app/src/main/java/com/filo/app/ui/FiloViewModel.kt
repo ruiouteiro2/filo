@@ -119,12 +119,40 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
                     scope = viewModelScope,
                 )
                 repo.startRealtime()
-                // A realtime change should reach the home screen widgets too, not just the app.
-                repo.onRemoteChange = { viewModelScope.launch { pushToWidgets() } }
+                // The widget side of a realtime change is wired up in FiloApp, on a scope
+                // that does not die when this screen does.
             } else {
                 _startup.value = Startup.NeedsPairing
             }
         }
+    }
+
+    private var nowPlayingJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * While the app is on screen, watch what this phone is playing directly. The listener
+     * service still does the heavy lifting in the background, but it can be unbound by the
+     * system without warning, and "I can see the app and it is wrong" is the one case where
+     * that is unforgivable. Writes only happen when something actually changed.
+     */
+    fun startNowPlayingWatch() {
+        if (nowPlayingJob?.isActive == true) return
+        nowPlayingJob = viewModelScope.launch {
+            while (true) {
+                runCatching {
+                    if (repo.publishCurrentSession(heartbeat = false)) {
+                        repo.refresh()
+                        pushToWidgets()
+                    }
+                }
+                kotlinx.coroutines.delay(NOW_PLAYING_POLL_MS)
+            }
+        }
+    }
+
+    fun stopNowPlayingWatch() {
+        nowPlayingJob?.cancel()
+        nowPlayingJob = null
     }
 
     /** Foreground sync: presence, battery, one location read, then weather, then widgets. */
@@ -286,6 +314,8 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
     fun setLocale(locale: String) = viewModelScope.launch {
         repo.setLocale(locale)
         applyLocale(locale)
+        // The widgets pick their countdown wording from this too.
+        pushToWidgets()
     }
 
     fun addCountdown(labelEn: String, labelIt: String, date: LocalDate, emoji: String?, primary: Boolean) =
@@ -309,3 +339,6 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(locale))
     }
 }
+
+/** Often enough to feel immediate, rare enough to be free when nothing changes. */
+private const val NOW_PLAYING_POLL_MS = 8_000L

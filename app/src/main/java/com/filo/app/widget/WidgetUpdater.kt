@@ -12,6 +12,7 @@ import com.filo.app.core.prefs.filoDataStore
 import com.filo.app.data.FiloRepository
 import com.filo.app.work.HeartResetWorker
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.util.concurrent.TimeUnit
 
 /** One call that refreshes every widget the couple might have placed. */
@@ -32,6 +33,13 @@ object PingState {
 
     private const val CONFIRMATION_MS = 8_000L
     private const val MIN_INTERVAL_MS = 60_000L
+
+    /** Live for the widget composition, same reasoning as the snapshot flow. */
+    fun recentlySentFlow(context: Context): kotlinx.coroutines.flow.Flow<Boolean> =
+        context.filoDataStore.data.map { prefs ->
+            val last = prefs[PrefKeys.LastPingAt] ?: return@map false
+            System.currentTimeMillis() - last < CONFIRMATION_MS
+        }
 
     suspend fun recentlySent(context: Context): Boolean {
         val last = context.filoDataStore.data.first()[PrefKeys.LastPingAt] ?: return false

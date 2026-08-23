@@ -21,6 +21,31 @@ object NowPlayingReader {
 
     val SPOTIFY_PACKAGES = setOf("com.spotify.music", "com.spotify.lite")
 
+    /**
+     * What Spotify is doing right now, asked directly rather than waited for.
+     *
+     * getActiveSessions only requires that our notification listener component is *enabled*,
+     * not that the service is currently bound - so this keeps working through the unbinding
+     * Android does on every app update, which is exactly when the push based path goes quiet.
+     */
+    fun readNow(context: android.content.Context): LocalNowPlaying? {
+        if (!NotificationAccess.isGranted(context)) return null
+        val manager = context.getSystemService(android.media.session.MediaSessionManager::class.java)
+            ?: return null
+        val component = android.content.ComponentName(
+            context,
+            NowPlayingListenerService::class.java,
+        )
+        val controllers = runCatching { manager.getActiveSessions(component) }
+            .onFailure { android.util.Log.i("NowPlaying", "cannot read sessions", it) }
+            .getOrNull()
+            .orEmpty()
+        return controllers.asSequence()
+            .mapNotNull { read(it) }
+            .sortedByDescending { it.isPlaying }
+            .firstOrNull()
+    }
+
     /** Spotify appends this to the artist when Smart Shuffle is on. */
     private const val SMART_SHUFFLE_SUFFIX = " • Smart Shuffle"
 

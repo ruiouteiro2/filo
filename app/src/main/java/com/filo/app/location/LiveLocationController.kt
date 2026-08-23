@@ -89,6 +89,12 @@ class LocationBootReceiver : BroadcastReceiver() {
                 ContextCompat.startForegroundService(app, Intent(app, LiveLocationService::class.java))
             }
         }.onFailure { Log.w(TAG, "boot restart failed", it) }
+        // The same two events that bring this receiver to life are the ones that leave the
+        // now-playing listener unbound, so put it back before anyone notices it went quiet.
+        runCatching { com.filo.app.nowplaying.NotificationAccess.requestRebind(app) }
+        // A reboot or an app update wipes the widgets' rendered state and leaves them on
+        // Glance's loading spinner until something redraws them. This is that something.
+        runCatching { com.filo.app.work.SyncWorker.runNow(app) }
         pending.finish()
     }
 }
