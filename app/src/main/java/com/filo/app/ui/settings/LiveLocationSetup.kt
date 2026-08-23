@@ -31,7 +31,7 @@ import com.filo.app.location.LocationPermissions
 import com.filo.app.ui.components.FiloButton
 import com.filo.app.ui.components.FiloSecondaryButton
 import com.filo.app.ui.theme.Ash
-import com.filo.app.ui.theme.Blood
+import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.FiloType
 import com.filo.app.ui.theme.Surface
@@ -100,7 +100,7 @@ fun LiveLocationSetupDialog(
             Text(
                 text = stringResource(R.string.setup_step_of, step.ordinal + 1, Step.Ready.ordinal),
                 style = FiloType.Timestamp,
-                color = Blood,
+                color = Crimson,
             )
             Spacer(Modifier.height(20.dp))
             FiloButton(

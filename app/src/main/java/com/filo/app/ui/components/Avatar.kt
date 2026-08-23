@@ -16,10 +16,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.filo.app.ui.theme.Blood
 import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Ink
-import com.filo.app.ui.theme.Karla
+import com.filo.app.ui.theme.Cormorant
 import java.util.Locale
 
 /**
@@ -38,7 +37,7 @@ fun Avatar(
             .size(size)
             .clip(CircleShape)
             .background(Ink)
-            .border(1.dp, Blood.copy(alpha = 0.55f), CircleShape),
+            .border(1.dp, Crimson.copy(alpha = 0.55f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         if (!photoUrl.isNullOrBlank()) {
@@ -51,7 +50,7 @@ fun Avatar(
         } else {
             Text(
                 text = initial(displayName),
-                fontFamily = Karla,
+                fontFamily = Cormorant,
                 fontWeight = FontWeight.Bold,
                 fontSize = (size.value * 0.36f).sp,
                 color = Crimson,

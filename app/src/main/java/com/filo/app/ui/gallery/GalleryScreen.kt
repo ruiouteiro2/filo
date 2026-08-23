@@ -25,7 +25,7 @@ import com.filo.app.ui.components.Timestamp
 import com.filo.app.ui.theme.Ash
 import com.filo.app.ui.theme.Ember
 import com.filo.app.ui.theme.FiloType
-import com.filo.app.ui.theme.Blood
+import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.Bone
 import java.time.LocalTime
@@ -65,7 +65,7 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
             FiloCard {
                 SectionLabel("Countdown numeral")
                 Spacer(Modifier.height(8.dp))
-                Text("42", style = FiloType.Numeral, color = Blood)
+                Text("42", style = FiloType.Numeral, color = Crimson)
                 Text("days until the next visit", style = FiloType.Body, color = Bone)
                 Timestamp("14 September 2026")
             }
@@ -90,7 +90,7 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
                 CardValue("78%")
                 CardValue("11%", color = Ember)
                 Text("Ash secondary text", style = FiloType.Body, color = Ash)
-                Text("Blood numerals and hairlines", style = FiloType.Body, color = Blood)
+                Text("Crimson numerals and hairlines", style = FiloType.Body, color = Crimson)
             }
         }
 

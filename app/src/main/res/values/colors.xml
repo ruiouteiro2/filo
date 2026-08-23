@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ink">#0A0709</color>
-    <color name="surface_dark">#16090C</color>
-    <color name="blood">#B01523</color>
-    <color name="crimson">#D41E2F</color>
-    <color name="bone">#F2E8E6</color>
-    <color name="ash">#8F7377</color>
-    <color name="ember">#FF3B30</color>
+    <!-- Tokens copied from the "I love you forever" site so app and site match exactly. -->
+    <color name="ink">#060606</color>
+    <color name="surface_dark">#120607</color>
+    <color name="surface_high">#1A090C</color>
+    <color name="crimson">#C1121F</color>
+    <color name="scarlet">#E63946</color>
+    <color name="ruby">#9B0F1A</color>
+    <color name="rose_ash">#E9BFC2</color>
+    <color name="bone">#F4E8E5</color>
+    <color name="ash">#9C8A8C</color>
+    <color name="ember">#FF5966</color>
 </resources>

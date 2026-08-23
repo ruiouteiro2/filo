@@ -93,18 +93,6 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
     val locale = prefs.currentPairing().locale
     val clock24h = prefs.currentClock24h()
 
-    val zone = PgTime.zone(partner?.timezone)
-    val ring = if (partner != null) {
-        WidgetImages.renderDayRing(
-            context = context,
-            avatarUrl = photoUrls[partner.photoUrl],
-            nowLocal = Instant.now().atZone(zone).toLocalTime(),
-            sleepStart = PgTime.localTime(partner.sleepStart),
-            sleepEnd = PgTime.localTime(partner.sleepEnd),
-        )
-    } else {
-        null
-    }
     val photo = WidgetImages.cachePhoto(context, photoUrls[partner?.dailyPhotoUrl])
 
     WidgetSnapshotStore.write(
@@ -115,7 +103,6 @@ suspend fun writeSnapshot(context: Context, repository: FiloRepository, prefs: F
             distance = repository.distanceState(),
             locale = locale,
             clock24h = clock24h,
-            ringImage = ring,
             photoImage = photo,
         ),
     )

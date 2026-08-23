@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 private val FiloColorScheme = darkColorScheme(
     primary = Crimson,
     onPrimary = Ink,
-    secondary = Blood,
+    secondary = RoseAsh,
     onSecondary = Ink,
     background = Ink,
     onBackground = Bone,
@@ -22,7 +22,7 @@ private val FiloColorScheme = darkColorScheme(
     onSurfaceVariant = Ash,
     error = Ember,
     onError = Bone,
-    outline = Blood,
+    outline = Line,
 )
 
 /** True when the user has turned animations off system wide. */

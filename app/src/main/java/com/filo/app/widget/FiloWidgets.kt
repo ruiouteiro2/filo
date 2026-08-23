@@ -46,13 +46,14 @@ import com.filo.app.core.time.PgTime
 import com.filo.app.data.weather.Wmo
 
 // The palette again, as Compose colours for Glance.
-private val Ink = Color(0xFF0A0709)
-private val Surface = Color(0xFF16090C)
-private val Blood = Color(0xFFB01523)
-private val Crimson = Color(0xFFD41E2F)
-private val Bone = Color(0xFFF2E8E6)
-private val Ash = Color(0xFF8F7377)
-private val Ember = Color(0xFFFF3B30)
+private val Ink = Color(0xFF060606)
+private val Surface = Color(0xFF120607)
+private val Crimson = Color(0xFFC1121F)
+private val Scarlet = Color(0xFFE63946)
+private val Bone = Color(0xFFF4E8E5)
+private val Ash = Color(0xFF9C8A8C)
+private val Ember = Color(0xFFFF5966)
+private val RoseAsh = Color(0xFFE9BFC2)
 
 const val EXTRA_DESTINATION = "filo.destination"
 
@@ -147,56 +148,79 @@ private fun TogetherContent(snapshot: WidgetSnapshot) {
     val context = LocalContext.current
     WidgetShell(destination = "home") {
         if (!snapshot.paired) return@WidgetShell NotPaired()
-        Row(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.Vertical.CenterVertically) {
-            val ring = WidgetImages.loadFile(snapshot.ringImage)
-            if (ring != null) {
-                Image(
-                    provider = ImageProvider(ring),
-                    contentDescription = snapshot.partnerName,
-                    modifier = GlanceModifier.size(96.dp),
-                )
-                Spacer(GlanceModifier.width(14.dp))
-            }
-            Column(modifier = GlanceModifier.defaultWeight()) {
-                Value(snapshot.partnerName ?: context.getString(R.string.widget_no_data))
+        Column(modifier = GlanceModifier.fillMaxSize()) {
+            // Who and when: their name, their clock ticking natively in their timezone.
+            Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                Column(modifier = GlanceModifier.defaultWeight()) {
+                    Text(
+                        text = snapshot.partnerName ?: context.getString(R.string.widget_no_data),
+                        style = TextStyle(color = ColorProvider(Bone), fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                    )
+                    Body(
+                        when (snapshot.partnerAsleep) {
+                            true -> context.getString(R.string.state_asleep)
+                            false -> context.getString(R.string.state_awake)
+                            null -> context.getString(R.string.state_unknown)
+                        },
+                    )
+                }
                 PartnerClock(snapshot.partnerTimezone, snapshot.clock24h)
-                Body(
-                    when (snapshot.partnerAsleep) {
-                        true -> context.getString(R.string.state_asleep)
-                        false -> context.getString(R.string.state_awake)
-                        null -> context.getString(R.string.state_unknown)
-                    },
-                )
-                Spacer(GlanceModifier.height(6.dp))
-                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                    if (snapshot.weatherCode != null && snapshot.weatherTemp != null) {
-                        Image(
-                            provider = ImageProvider(Wmo.iconRes(snapshot.weatherCode)),
-                            contentDescription = null,
-                            colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(Crimson)),
-                            modifier = GlanceModifier.size(16.dp),
-                        )
-                        Spacer(GlanceModifier.width(4.dp))
-                        Body(
-                            context.getString(
-                                R.string.weather_temperature,
-                                DayMath.number(snapshot.weatherTemp.toLong()),
-                            ),
-                            color = Bone,
-                        )
-                        Spacer(GlanceModifier.width(10.dp))
-                    }
-                    snapshot.partnerBattery?.let { level ->
-                        Body(
-                            context.getString(R.string.battery_plain, level),
-                            color = if (level < 15 && !snapshot.partnerCharging) Ember else Bone,
-                        )
-                    }
+            }
+
+            Spacer(GlanceModifier.height(8.dp))
+
+            // The vitals in one line: weather, battery, distance.
+            Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                if (snapshot.weatherCode != null && snapshot.weatherTemp != null) {
+                    Image(
+                        provider = ImageProvider(Wmo.iconRes(snapshot.weatherCode)),
+                        contentDescription = null,
+                        colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(Scarlet)),
+                        modifier = GlanceModifier.size(15.dp),
+                    )
+                    Spacer(GlanceModifier.width(4.dp))
+                    Body(
+                        context.getString(
+                            R.string.weather_temperature,
+                            DayMath.number(snapshot.weatherTemp.toLong()),
+                        ),
+                        color = Bone,
+                    )
+                    Spacer(GlanceModifier.width(12.dp))
+                }
+                snapshot.partnerBattery?.let { level ->
+                    Body(
+                        context.getString(R.string.battery_plain, level),
+                        color = if (level < 15 && !snapshot.partnerCharging) Ember else Bone,
+                    )
+                    Spacer(GlanceModifier.width(12.dp))
                 }
                 if (snapshot.distanceKnown && snapshot.distanceKm != null) {
                     Body(context.getString(R.string.distance_km, DayMath.number(snapshot.distanceKm)))
                 }
-                snapshot.partnerMoodEmoji?.let { Body("$it ${snapshot.partnerMoodText.orEmpty()}", color = Bone) }
+            }
+
+            // Their mood, if they have one out.
+            snapshot.partnerMoodEmoji?.let { emoji ->
+                Spacer(GlanceModifier.height(6.dp))
+                Body("$emoji ${snapshot.partnerMoodText.orEmpty()}".trim(), color = Bone)
+            }
+
+            // What they are listening to, straight on the home screen.
+            snapshot.partnerTrack?.let { track ->
+                Spacer(GlanceModifier.height(6.dp))
+                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                    Text(
+                        text = if (snapshot.partnerMusicPlaying) "\u266A" else "\u23F8",
+                        style = TextStyle(color = ColorProvider(Scarlet), fontSize = 12.sp),
+                    )
+                    Spacer(GlanceModifier.width(5.dp))
+                    Text(
+                        text = listOfNotNull(track, snapshot.partnerArtist).joinToString(" \u2014 "),
+                        style = TextStyle(color = ColorProvider(RoseAsh), fontSize = 12.sp),
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }

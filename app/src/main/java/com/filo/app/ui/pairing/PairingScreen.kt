@@ -35,8 +35,8 @@ import com.filo.app.ui.components.FiloTextField
 import com.filo.app.ui.theme.Ash
 import com.filo.app.ui.theme.Ember
 import com.filo.app.ui.theme.FiloType
-import com.filo.app.ui.theme.NumeralFamily
-import com.filo.app.ui.theme.Blood
+import com.filo.app.ui.theme.Cormorant
+import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.Bone
 
@@ -161,10 +161,10 @@ fun PairingScreen(
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = shown,
-                    fontFamily = NumeralFamily,
+                    fontFamily = Cormorant,
                     fontSize = 56.sp,
                     letterSpacing = 8.sp,
-                    color = Blood,
+                    color = Crimson,
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(

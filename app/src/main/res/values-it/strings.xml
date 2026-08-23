@@ -278,4 +278,5 @@
     <string name="update_install">Installa</string>
     <string name="update_failed">Non riesco a controllare adesso. Riprova tra un po\u2019.</string>
     <string name="update_banner">Una nuova versione di Filo è pronta. Apri le impostazioni per installarla.</string>
+    <string name="composer_title">Cosa hai in mente</string>
 </resources>

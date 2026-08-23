@@ -21,12 +21,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.filo.app.ui.theme.Ash
-import com.filo.app.ui.theme.Blood
+import com.filo.app.ui.theme.RoseAsh
+import com.filo.app.ui.theme.Crimson
+import com.filo.app.ui.theme.Line
+import com.filo.app.ui.theme.SurfaceHigh
 import com.filo.app.ui.theme.FiloType
 import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.LocalReducedMotion
@@ -43,14 +47,18 @@ fun FiloCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(18.dp)
     val interactionSource = rememberPressSource()
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(Surface)
-            .border(1.dp, Blood.copy(alpha = 0.30f), shape)
+            // The site's card: a vertical fade from #1a090c into near black, edged with the
+            // scarlet 22% hairline it calls --line.
+            .background(
+                Brush.verticalGradient(colors = listOf(SurfaceHigh, Surface)),
+            )
+            .border(1.dp, Line, shape)
             .then(
                 if (onClick == null) {
                     Modifier
@@ -69,7 +77,7 @@ fun FiloCard(
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     val locale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
-    Text(text = text.uppercase(locale), style = FiloType.Label, color = Ash, modifier = modifier)
+    Text(text = text.uppercase(locale), style = FiloType.Label, color = RoseAsh.copy(alpha = 0.85f), modifier = modifier)
 }
 
 @Composable

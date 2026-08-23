@@ -23,8 +23,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.filo.app.ui.theme.Blood
 import com.filo.app.ui.theme.Crimson
+import com.filo.app.ui.theme.Ruby
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.LocalReducedMotion
 
@@ -39,9 +39,9 @@ fun OrbBackground(
 ) {
     Box(modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            drawOrb(center = Offset(size.width * 0.12f, size.height * 0.06f), radius = size.width * 0.62f, color = Blood, peak = 0.30f)
+            drawOrb(center = Offset(size.width * 0.12f, size.height * 0.06f), radius = size.width * 0.62f, color = Ruby, peak = 0.30f)
             drawOrb(center = Offset(size.width * 0.95f, size.height * 0.30f), radius = size.width * 0.55f, color = Crimson, peak = 0.14f)
-            drawOrb(center = Offset(size.width * 0.30f, size.height * 0.92f), radius = size.width * 0.70f, color = Blood, peak = 0.16f)
+            drawOrb(center = Offset(size.width * 0.30f, size.height * 0.92f), radius = size.width * 0.70f, color = Crimson, peak = 0.16f)
         }
         content()
     }

@@ -8,7 +8,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -32,6 +35,35 @@ object PrefKeys {
     val AskedNotifications = booleanPreferencesKey("asked_notifications")
     val LastPingAt = longPreferencesKey("last_ping_at")
     val ClockFormat = stringPreferencesKey("clock_format")
+    val RecentEmojis = stringPreferencesKey("recent_emojis")
+}
+
+/**
+ * The emojis this person actually uses, newest first, so the composer can offer them back
+ * as one-tap choices instead of a canned preset row.
+ */
+object RecentEmojis {
+    private const val MAX = 8
+
+    suspend fun load(context: Context): List<String> =
+        (context.filoDataStore.data.first()[PrefKeys.RecentEmojis] ?: "")
+            .split('\n').filter { it.isNotBlank() }
+
+    /** Fire-and-forget: a lost write here costs nothing. */
+    fun record(context: Context, emoji: String) {
+        val app = context.applicationContext
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching {
+                app.filoDataStore.edit { prefs ->
+                    val current = (prefs[PrefKeys.RecentEmojis] ?: "")
+                        .split('\n').filter { it.isNotBlank() }
+                    prefs[PrefKeys.RecentEmojis] =
+                        (listOf(emoji) + current.filterNot { it == emoji })
+                            .take(MAX).joinToString("\n")
+                }
+            }
+        }
+    }
 }
 
 data class PairingState(

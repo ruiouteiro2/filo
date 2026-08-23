@@ -34,6 +34,7 @@ data class Member(
     @SerialName("note_updated_at") val noteUpdatedAt: String? = null,
     @SerialName("daily_photo_url") val dailyPhotoUrl: String? = null,
     @SerialName("daily_photo_at") val dailyPhotoAt: String? = null,
+    @SerialName("fcm_token") val fcmToken: String? = null,
     @SerialName("last_seen_at") val lastSeenAt: String? = null,
     @SerialName("location_accuracy_m") val locationAccuracyM: Double? = null,
     @SerialName("location_is_live") val locationIsLive: Boolean = false,

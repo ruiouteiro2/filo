@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -50,6 +51,8 @@ import java.time.LocalTime
 import java.time.ZoneId
 
 private const val TAG = "FiloRepository"
+
+private suspend fun <T> com.google.android.gms.tasks.Task<T>.asAwait(): T = this.await()
 
 /** What went wrong while pairing, in terms the UI can put a sentence to. */
 enum class PairError { NoSuchCode, CoupleFull, Offline, Unknown }
@@ -155,6 +158,7 @@ class FiloRepository(private val context: Context) {
         }
         prefs.savePairing(result.coupleId, uid, result.inviteCode, displayName, locale)
         refresh()
+        runCatching { ensureFcmToken() }
         startRealtime()
         result
     }
@@ -317,6 +321,26 @@ class FiloRepository(private val context: Context) {
     }
 
     suspend fun setFcmToken(token: String): Boolean = updateMe { set("fcm_token", token) }
+
+    /**
+     * Self healing: make sure this phone's push token is on our row. Runs after pairing and
+     * on every sync, because a token that was minted before the members row existed - or
+     * before pairing ever happened - fell on the floor, and the heart then silently never
+     * arrives for exactly one of the two people.
+     */
+    suspend fun ensureFcmToken() {
+        if (!com.filo.app.BuildConfig.PUSH_CONFIGURED) return
+        awaitAuthReady()
+        if (currentUserId() == null) return
+        val token = runCatching {
+        // kotlinx-coroutines-play-services provides Task.await() as an extension.
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().token.asAwait()
+    }.getOrNull() ?: return
+        val existing = _snapshot.value.me?.fcmToken
+        if (existing != token) {
+            setFcmToken(token)
+        }
+    }
 
     /**
      * Publishes what this phone is playing so the other one can see it. Only the track's
@@ -582,6 +606,7 @@ class FiloRepository(private val context: Context) {
         if (currentUserId() == null && ensureSignedIn() == null) return@withContext false
 
         syncTimezoneAndPresence()
+        runCatching { ensureFcmToken() }
 
         BatteryReader.read(context)?.let { setBattery(it.level, it.charging) }
 

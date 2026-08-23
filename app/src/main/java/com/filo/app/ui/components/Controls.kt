@@ -27,10 +27,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.filo.app.ui.theme.Ash
 import com.filo.app.ui.theme.FiloType
-import com.filo.app.ui.theme.Blood
+import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.Bone
-import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Surface
 
 @Composable
@@ -43,7 +42,7 @@ fun FiloButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(999.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Crimson,
             contentColor = Ink,
@@ -66,7 +65,7 @@ fun FiloSecondaryButton(
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(999.dp),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
             contentColor = Bone,
@@ -137,7 +136,7 @@ fun FiloSegmented(
                     .height(44.dp)
                     .background(if (selected) Crimson else Color.Transparent, RoundedCornerShape(11.dp))
                     .then(
-                        if (selected) Modifier else Modifier.border(1.dp, Blood.copy(alpha = 0.2f), RoundedCornerShape(11.dp)),
+                        if (selected) Modifier else Modifier.border(1.dp, Crimson.copy(alpha = 0.2f), RoundedCornerShape(11.dp)),
                     )
                     .clickable { onSelect(key) },
                 contentAlignment = Alignment.Center,

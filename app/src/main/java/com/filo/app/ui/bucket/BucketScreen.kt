@@ -57,9 +57,8 @@ import com.filo.app.ui.components.SectionLabel
 import com.filo.app.ui.components.Timestamp
 import com.filo.app.ui.components.OrbBackground
 import com.filo.app.ui.theme.Ash
-import com.filo.app.ui.theme.Blood
-import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.Crimson
+import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.FiloType
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.LocalReducedMotion
@@ -142,7 +141,7 @@ fun BucketScreen(
                     open.forEachIndexed { index, item ->
                         BucketRow(item = item, onToggle = onToggle, onDelete = onDelete)
                         if (index != open.lastIndex) {
-                            HorizontalDivider(color = Blood.copy(alpha = 0.14f))
+                            HorizontalDivider(color = Crimson.copy(alpha = 0.14f))
                         }
                     }
                 }
@@ -170,7 +169,7 @@ fun BucketScreen(
                             done.forEachIndexed { index, item ->
                                 BucketRow(item = item, onToggle = onToggle, onDelete = onDelete)
                                 if (index != done.lastIndex) {
-                                    HorizontalDivider(color = Blood.copy(alpha = 0.14f))
+                                    HorizontalDivider(color = Crimson.copy(alpha = 0.14f))
                                 }
                             }
                         }
@@ -322,7 +321,7 @@ private fun AddButton(enabled: Boolean, onClick: () -> Unit) {
             .background(if (enabled) Crimson else Surface)
             // Without an outline the disabled state is a floating glyph on black: it has to
             // still look like a button you could press once there is something to add.
-            .border(1.dp, if (enabled) Crimson else Blood.copy(alpha = 0.45f), CircleShape)
+            .border(1.dp, if (enabled) Crimson else Crimson.copy(alpha = 0.45f), CircleShape)
             .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {

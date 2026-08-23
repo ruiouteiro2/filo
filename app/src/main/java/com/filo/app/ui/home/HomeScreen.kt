@@ -78,9 +78,8 @@ import com.filo.app.ui.components.StaggeredEntrance
 import com.filo.app.ui.components.Timestamp
 import com.filo.app.ui.permissions.openAppSettings
 import com.filo.app.ui.theme.Ash
-import com.filo.app.ui.theme.Blood
-import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.Crimson
+import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.Ember
 import com.filo.app.ui.theme.FiloType
 import com.filo.app.ui.theme.Ink
@@ -138,6 +137,15 @@ fun HomeScreen(
         FullImageDialog(url = url, name = name, onDismiss = { viewing = null })
     }
 
+    if (composing) {
+        ComposerDialog(
+            me = me,
+            onSetMood = onSetMood,
+            onSetNote = onSetNote,
+            onDismiss = { composing = false },
+        )
+    }
+
     LaunchedEffect(Unit) { onRefresh() }
 
     OrbBackground(modifier = modifier.fillMaxSize().background(Ink)) {
@@ -190,36 +198,25 @@ fun HomeScreen(
             }
 
             StaggeredEntrance(index = 1) {
-                ThoughtsCard(
-                    me = me,
-                    partner = partner,
-                    editing = composing,
-                    onEditingChange = { composing = it },
-                    onSetMood = onSetMood,
-                    onSetNote = onSetNote,
-                )
-            }
-
-            StaggeredEntrance(index = 2) {
                 CountdownCard(snapshot = snapshot, locale = locale, onOpenCountdowns = onOpenCountdowns)
             }
 
-            StaggeredEntrance(index = 3) {
+            StaggeredEntrance(index = 2) {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     WeatherCard(weather = weather, modifier = Modifier.weight(1f))
                     BatteryCard(partner = partner, modifier = Modifier.weight(1f))
                 }
             }
 
-            StaggeredEntrance(index = 4) { DaysTogetherCard(snapshot = snapshot) }
+            StaggeredEntrance(index = 3) { DaysTogetherCard(snapshot = snapshot) }
 
-            StaggeredEntrance(index = 5) { DistanceCard(distance = distance, me = me, partner = partner) }
+            StaggeredEntrance(index = 4) { DistanceCard(distance = distance, me = me, partner = partner) }
 
-            StaggeredEntrance(index = 6) {
+            StaggeredEntrance(index = 5) {
                 MusicCard(partner = partner, me = me)
             }
 
-            StaggeredEntrance(index = 7) {
+            StaggeredEntrance(index = 6) {
                 PhotoCard(
                     onViewImage = { url, name -> viewing = url to name },
                     partner = partner,
@@ -229,7 +226,7 @@ fun HomeScreen(
                 )
             }
 
-            StaggeredEntrance(index = 8) {
+            StaggeredEntrance(index = 7) {
                 BucketCard(
                     items = snapshot.bucket,
                     onToggle = onToggleBucket,
@@ -237,7 +234,7 @@ fun HomeScreen(
                 )
             }
 
-            StaggeredEntrance(index = 9) { PingCard(onPing = onPing) }
+            StaggeredEntrance(index = 8) { PingCard(onPing = onPing) }
 
             Spacer(Modifier.height(24.dp))
         }
@@ -276,7 +273,7 @@ private fun UsCard(
             Image(
                 painter = painterResource(R.drawable.ic_edit),
                 contentDescription = stringResource(R.string.thoughts_edit),
-                colorFilter = ColorFilter.tint(Blood),
+                colorFilter = ColorFilter.tint(Crimson),
                 modifier = Modifier
                     .size(34.dp)
                     .clip(CircleShape)
@@ -317,7 +314,7 @@ private fun UsCard(
         // and runs full width. No divider and no empty rows when neither of you has written.
         if (theirNote != null || myNote != null) {
             Spacer(Modifier.height(16.dp))
-            HorizontalDivider(color = Blood.copy(alpha = 0.18f))
+            HorizontalDivider(color = Crimson.copy(alpha = 0.18f))
             Spacer(Modifier.height(14.dp))
             theirNote?.let { NoteRow(partner!!.displayName, it, PgTime.instant(partner.noteUpdatedAt)) }
             if (theirNote != null && myNote != null) Spacer(Modifier.height(10.dp))
@@ -422,87 +419,60 @@ private fun MoodBadge(emoji: String) {
         modifier = Modifier
             .size(30.dp)
             .background(Ink, CircleShape)
-            .border(1.dp, Blood.copy(alpha = 0.6f), CircleShape),
+            .border(1.dp, Crimson.copy(alpha = 0.6f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Text(emoji, fontSize = 15.sp)
     }
 }
 
-private val MoodPresets = listOf("\uD83D\uDE0A", "\uD83E\uDD70", "\uD83D\uDE34", "\uD83D\uDE14", "\uD83D\uDE24", "\uD83E\uDD72", "\u2615", "\uD83C\uDF19")
-
 /**
- * My composer, and only mine. What the two of us are feeling is shown above in US; this card
- * is purely the write surface. Its editing state lives in the screen so the pencil on the US
- * card can open it too.
- *
- * The eight presets are shortcuts, not a menu: the + at the end opens the full editor, where
- * any emoji from the keyboard works.
+ * The one place anything of mine is written: mood, a few words, the note. It exists only
+ * while it is open - nothing editable sits on the home screen pretending to be content.
  */
 @Composable
-private fun ThoughtsCard(
+private fun ComposerDialog(
     me: Member?,
-    partner: Member?,
-    editing: Boolean,
-    onEditingChange: (Boolean) -> Unit,
     onSetMood: (String?, String?) -> Unit,
     onSetNote: (String) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    var noteDraft by remember(me?.noteText) { mutableStateOf(me?.noteText.orEmpty()) }
-    var moodDraft by remember(me?.moodText) { mutableStateOf(me?.moodText.orEmpty()) }
-    var emojiDraft by remember(me?.moodEmoji) { mutableStateOf(me?.moodEmoji.orEmpty()) }
+    var noteDraft by remember { mutableStateOf(me?.noteText.orEmpty()) }
+    var moodDraft by remember { mutableStateOf(me?.moodText.orEmpty()) }
+    var emojiDraft by remember { mutableStateOf(me?.moodEmoji.orEmpty()) }
 
-    // "The message" is what people actually come here to write, so it takes the keyboard the
-    // moment the editor opens instead of making them find it.
+    val composerContext = androidx.compose.ui.platform.LocalContext.current
+    var recents by remember { mutableStateOf(emptyList<String>()) }
+    LaunchedEffect(Unit) { recents = com.filo.app.core.prefs.RecentEmojis.load(composerContext) }
+
+    // The message is what people come here to write, so it owns the keyboard on open.
     val noteFocus = remember { FocusRequester() }
-    LaunchedEffect(editing) {
-        if (editing) {
-            // The field has to exist before it can take focus; one frame is enough.
-            kotlinx.coroutines.delay(80)
-            runCatching { noteFocus.requestFocus() }
-        }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(120)
+        runCatching { noteFocus.requestFocus() }
     }
 
-    FiloCard {
-        SectionLabel(stringResource(R.string.label_you))
-        Spacer(Modifier.height(12.dp))
-
-        // The fast path: one tap sets the mood, the + opens everything else.
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-            MoodPresets.forEach { preset ->
-                val selected = me?.moodEmoji == preset
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .background(if (selected) Blood.copy(alpha = 0.35f) else Color.Transparent, CircleShape)
-                        .clickable {
-                            emojiDraft = preset
-                            onSetMood(preset, moodDraft)
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(text = preset, fontSize = if (selected) 22.sp else 19.sp)
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(Blood.copy(alpha = 0.25f), CircleShape)
-                    .border(1.dp, Blood.copy(alpha = 0.6f), CircleShape)
-                    .clickable { onEditingChange(true) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_plus),
-                    contentDescription = stringResource(R.string.thoughts_edit),
-                    colorFilter = ColorFilter.tint(Crimson),
-                    modifier = Modifier.size(16.dp),
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(com.filo.app.ui.theme.SurfaceHigh, com.filo.app.ui.theme.Surface),
+                    ),
+                    RoundedCornerShape(22.dp),
                 )
-            }
-        }
+                .border(1.dp, com.filo.app.ui.theme.Line, RoundedCornerShape(22.dp))
+                .padding(22.dp)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Text(
+                stringResource(R.string.composer_title),
+                style = FiloType.TitleItalic,
+                color = Bone,
+            )
+            Spacer(Modifier.height(16.dp))
 
-        if (editing) {
-            Spacer(Modifier.height(14.dp))
             FiloTextField(
                 value = noteDraft,
                 onValueChange = { noteDraft = it.take(140) },
@@ -511,13 +481,12 @@ private fun ThoughtsCard(
                 modifier = Modifier.focusRequester(noteFocus),
             )
             Timestamp(stringResource(R.string.note_counter, noteDraft.length, 140))
-            Spacer(Modifier.height(10.dp))
+
+            Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.width(110.dp)) {
+                Box(modifier = Modifier.width(100.dp)) {
                     FiloTextField(
                         value = emojiDraft,
-                        // Two glyphs is enough for anything, including flags and skin tones,
-                        // which are several code points each.
                         onValueChange = { emojiDraft = it.take(8) },
                         label = stringResource(R.string.mood_emoji_hint),
                     )
@@ -531,22 +500,44 @@ private fun ThoughtsCard(
                     )
                 }
             }
-            Spacer(Modifier.height(4.dp))
+            if (recents.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    recents.take(8).forEach { recent ->
+                        val selected = emojiDraft == recent
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .background(
+                                    if (selected) Crimson.copy(alpha = 0.4f) else Color.Transparent,
+                                    CircleShape,
+                                )
+                                .clickable { emojiDraft = if (selected) "" else recent },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(text = recent, fontSize = 19.sp)
+                        }
+                    }
+                }
+            }
             Timestamp(stringResource(R.string.mood_emoji_any))
-            Spacer(Modifier.height(10.dp))
+
+            Spacer(Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FiloButton(
                     text = stringResource(R.string.save),
                     onClick = {
-                        onSetMood(emojiDraft.trim().ifBlank { null }, moodDraft)
+                        val emoji = emojiDraft.trim().ifBlank { null }
+                        emoji?.let { com.filo.app.core.prefs.RecentEmojis.record(composerContext, it) }
+                        onSetMood(emoji, moodDraft)
                         onSetNote(noteDraft)
-                        onEditingChange(false)
+                        onDismiss()
                     },
                     modifier = Modifier.weight(1f),
                 )
                 FiloSecondaryButton(
                     text = stringResource(R.string.cancel),
-                    onClick = { onEditingChange(false) },
+                    onClick = onDismiss,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -640,7 +631,7 @@ private fun PhotoCard(
                     if (minePhoto != null) R.string.photo_replace_yours else R.string.photo_set_yours,
                 ),
                 style = FiloType.Label,
-                color = Blood,
+                color = Crimson,
                 modifier = Modifier.clickable {
                     picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 },
@@ -714,7 +705,7 @@ private fun BucketCard(
                 )
             }
             if (index != preview.lastIndex) {
-                HorizontalDivider(color = Blood.copy(alpha = 0.14f))
+                HorizontalDivider(color = Crimson.copy(alpha = 0.14f))
             }
         }
 
@@ -731,7 +722,7 @@ private fun BucketCard(
                 stringResource(R.string.bucket_see_all)
             },
             style = FiloType.Label,
-            color = Blood,
+            color = Crimson,
             modifier = Modifier.clickable { onOpenBucket() },
         )
     }
@@ -766,7 +757,7 @@ private fun MusicCard(partner: Member?, me: Member?) {
 
         MusicRow(member = partner, isMine = false)
         Spacer(Modifier.height(12.dp))
-        HorizontalDivider(color = Blood.copy(alpha = 0.14f))
+        HorizontalDivider(color = Crimson.copy(alpha = 0.14f))
         Spacer(Modifier.height(12.dp))
         MusicRow(member = me, isMine = true)
 
@@ -775,7 +766,7 @@ private fun MusicCard(partner: Member?, me: Member?) {
             Text(
                 text = stringResource(R.string.now_playing_enable),
                 style = FiloType.Label,
-                color = Blood,
+                color = Crimson,
                 modifier = Modifier.clickable { NotificationAccess.openSettings(context) },
             )
         }
@@ -815,7 +806,7 @@ private fun MusicRow(member: Member?, isMine: Boolean) {
                 modifier = Modifier
                     .size(48.dp)
                     .background(Ink, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                    .border(1.dp, Blood.copy(alpha = 0.35f), androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                    .border(1.dp, Crimson.copy(alpha = 0.35f), androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) { Text("\u266A", style = FiloType.Value, color = Ash) }
         }
@@ -959,7 +950,7 @@ private fun DistanceCard(distance: DistanceState, me: Member?, partner: Member?)
                             .fillMaxWidth()
                             .height(170.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .border(1.dp, Blood.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                            .border(1.dp, Crimson.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
                             .clickable {
                                 openInMaps(context, partner.lat, partner.lon, partner.displayName)
                             },

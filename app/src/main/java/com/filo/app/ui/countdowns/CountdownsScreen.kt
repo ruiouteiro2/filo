@@ -51,9 +51,8 @@ import com.filo.app.ui.components.OrbBackground
 import com.filo.app.ui.components.SectionLabel
 import com.filo.app.ui.components.Timestamp
 import com.filo.app.ui.theme.Ash
-import com.filo.app.ui.theme.Blood
-import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.Crimson
+import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.Ember
 import com.filo.app.ui.theme.FiloType
 import com.filo.app.ui.theme.Ink
@@ -218,7 +217,7 @@ private fun CountdownRow(
             Text(
                 stringResource(R.string.countdowns_make_primary),
                 style = FiloType.Label,
-                color = Blood,
+                color = Crimson,
                 modifier = Modifier.clickable { onMakePrimary() },
             )
         }
@@ -257,7 +256,7 @@ private fun CountdownEditor(
         Column(
             modifier = Modifier
                 .background(Ink, RoundedCornerShape(22.dp))
-                .border(1.dp, Blood.copy(alpha = 0.35f), RoundedCornerShape(22.dp))
+                .border(1.dp, Crimson.copy(alpha = 0.35f), RoundedCornerShape(22.dp))
                 .padding(22.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
@@ -282,7 +281,7 @@ private fun CountdownEditor(
                 Text(
                     text = stringResource(R.string.countdowns_add_translation),
                     style = FiloType.Label,
-                    color = Blood,
+                    color = Crimson,
                     modifier = Modifier.clickable { showTranslation = true },
                 )
             }
@@ -312,7 +311,7 @@ private fun CountdownEditor(
                         modifier = Modifier
                             .size(34.dp)
                             .background(
-                                if (selected) Blood.copy(alpha = 0.4f) else Color.Transparent,
+                                if (selected) Crimson.copy(alpha = 0.4f) else Color.Transparent,
                                 CircleShape,
                             )
                             .clickable { emoji = if (selected) "" else suggestion },
@@ -329,7 +328,7 @@ private fun CountdownEditor(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, Blood.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                    .border(1.dp, Crimson.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
                     .clickable { showDate = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -344,7 +343,7 @@ private fun CountdownEditor(
                         color = Crimson,
                     )
                 }
-                Text(stringResource(R.string.countdowns_change), style = FiloType.Label, color = Blood)
+                Text(stringResource(R.string.countdowns_change), style = FiloType.Label, color = Crimson)
             }
 
             Spacer(Modifier.height(18.dp))

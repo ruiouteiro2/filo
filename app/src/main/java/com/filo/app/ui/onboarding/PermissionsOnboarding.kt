@@ -46,9 +46,8 @@ import com.filo.app.ui.components.FiloSecondaryButton
 import com.filo.app.ui.components.OrbBackground
 import com.filo.app.ui.components.SectionLabel
 import com.filo.app.ui.theme.Ash
-import com.filo.app.ui.theme.Blood
-import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.Crimson
+import com.filo.app.ui.theme.Bone
 import com.filo.app.ui.theme.FiloType
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.Surface
@@ -205,7 +204,7 @@ fun PermissionsOnboarding(onDone: () -> Unit) {
                 Text(
                     text = stringResource(R.string.now_playing_app_info),
                     style = FiloType.Label,
-                    color = Blood,
+                    color = Crimson,
                     modifier = Modifier
                         .padding(8.dp)
                         .then(Modifier)

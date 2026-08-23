@@ -58,10 +58,9 @@ import com.filo.app.ui.components.SectionLabel
 import com.filo.app.ui.components.Timestamp
 import com.filo.app.ui.theme.Ash
 import com.filo.app.ui.theme.FiloType
-import com.filo.app.ui.theme.Blood
+import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.Bone
-import com.filo.app.ui.theme.Crimson
 import com.filo.app.ui.theme.Surface
 import java.time.Instant
 import java.time.LocalDate
@@ -324,7 +323,7 @@ fun SettingsScreen(
                 Text(
                     stringResource(R.string.settings_gallery),
                     style = FiloType.Label,
-                    color = Blood,
+                    color = Crimson,
                     modifier = Modifier.clickable { onOpenGallery() },
                 )
             }
@@ -389,8 +388,8 @@ fun SettingsScreen(
                     dayContentColor = Bone,
                     selectedDayContainerColor = Crimson,
                     selectedDayContentColor = Ink,
-                    todayContentColor = Blood,
-                    todayDateBorderColor = Blood,
+                    todayContentColor = Crimson,
+                    todayDateBorderColor = Crimson,
                 ),
             )
         }
@@ -421,7 +420,7 @@ private fun TimePickerDialog(
                     clockDialSelectedContentColor = Ink,
                     clockDialUnselectedContentColor = Bone,
                     selectorColor = Crimson,
-                    periodSelectorBorderColor = Blood,
+                    periodSelectorBorderColor = Crimson,
                     timeSelectorSelectedContainerColor = Crimson,
                     timeSelectorSelectedContentColor = Ink,
                     timeSelectorUnselectedContainerColor = Ink,
@@ -498,7 +497,7 @@ private fun NowPlayingCard() {
                 Text(
                     text = stringResource(R.string.now_playing_app_info),
                     style = FiloType.Label,
-                    color = Blood,
+                    color = Crimson,
                     modifier = Modifier.clickable { NotificationAccess.openAppInfo(context) },
                 )
             }
