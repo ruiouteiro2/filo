@@ -1,6 +1,5 @@
 -- Filo: complete schema for a fresh Supabase project.
 -- Paste this whole file into the SQL editor and run it once.
--- It is the three migrations in supabase/migrations/ concatenated, in order.
 -- Safe to re-run: every statement is guarded.
 
 -- ============================================================
@@ -9,9 +8,6 @@
 -- Filo schema. One couple, two members, everything scoped by couple_id.
 -- Row Level Security is on for every table without exception.
 
--- pg_net drives the push trigger. On some projects it must be enabled from
--- Database > Extensions first; the rest of the schema does not depend on it, so a
--- failure here is tolerated rather than aborting the whole run.
 create schema if not exists extensions;
 do $$
 begin
@@ -448,3 +444,58 @@ comment on column members.spotify_track_id is
 comment on column members.location_is_live is
   'True while that phone has background tracking switched on and reporting.';
 
+-- ============================================================
+-- 20260823180000_ping_trigger_no_stored_key.sql
+-- ============================================================
+-- Stop requiring the service role key to be stored in the database.
+--
+-- The ping trigger used to refuse to fire unless private.config held both the functions URL
+-- and a service role key, and it sent that key as a bearer token. But the function is
+-- deployed with --no-verify-jwt (it is only ever called by this trigger, and it validates the
+-- ping id it is given), so the token buys nothing and keeping a key that bypasses every RLS
+-- policy inside the database it protects is a bad trade.
+--
+-- The Authorization header is still sent when a key IS configured, so an existing setup keeps
+-- working unchanged.
+
+create or replace function notify_ping()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_url text;
+  v_key text;
+  v_headers jsonb;
+begin
+  select value into v_url from private.config where key = 'functions_url';
+
+  -- Not configured yet: the ping still records, it just does not notify.
+  if v_url is null then
+    return new;
+  end if;
+
+  select value into v_key from private.config where key = 'service_role_key';
+
+  v_headers := jsonb_build_object('Content-Type', 'application/json');
+  if v_key is not null then
+    v_headers := v_headers || jsonb_build_object('Authorization', 'Bearer ' || v_key);
+  end if;
+
+  perform net.http_post(
+    url := v_url || '/ping-notify',
+    headers := v_headers,
+    body := jsonb_build_object('ping_id', new.id::text)
+  );
+  return new;
+end;
+$$;
+
+
+-- ============================================================
+-- Point the ping trigger at your deployed Edge Function.
+-- ============================================================
+insert into private.config (key, value)
+values ('functions_url', 'https://lrmyvjzvsamqabofkmzz.supabase.co/functions/v1')
+on conflict (key) do update set value = excluded.value;
