@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- The app updates itself from GitHub Releases; this lets it hand the downloaded
+         APK to the system installer. Granted per app on a settings screen. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Android 11+ hides other packages unless they are declared here. Without this,
          isInstalled() always says no and the Spotify deep link cannot be targeted. -->
@@ -175,6 +178,16 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/photo_widget_info" />
         </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 </manifest>

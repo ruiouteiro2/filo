@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one place FileProvider may serve from: the update APK's cache folder. The path here
+     must match File(cacheDir, "apk/...") exactly or getUriForFile throws. -->
+<paths>
+    <cache-path name="apk" path="apk/" />
+</paths>

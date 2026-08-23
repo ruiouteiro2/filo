@@ -12,6 +12,7 @@ import com.filo.app.data.FiloRepository
 import com.filo.app.location.LiveLocationController
 import com.filo.app.spotify.SpotifyAuth
 import com.filo.app.spotify.SpotifyTokenStore
+import com.filo.app.update.UpdateManager
 import com.filo.app.push.PushSetup
 import com.filo.app.widget.WidgetUpdater
 import com.filo.app.work.writeSnapshot
@@ -101,6 +102,8 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             repo.ensureSignedIn()
             val state = prefs.currentPairing()
+            UpdateManager.cleanUp(getApplication())
+            UpdateManager.check(getApplication())
             if (state.isPaired) {
                 _startup.value = Startup.Paired
                 repo.loadCachedWeather()
@@ -193,6 +196,29 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
         } else {
             LiveLocationController.setEnabled(context, false)
             viewModelScope.launch { repo.setLocationLive(false) }
+        }
+    }
+
+    /** Self update, driven from settings and surfaced on the home screen. */
+    val updateState: StateFlow<UpdateManager.State> = UpdateManager.state
+
+    fun checkForUpdate(force: Boolean = false) = viewModelScope.launch {
+        UpdateManager.check(getApplication(), force = force)
+    }
+
+    fun downloadUpdate(release: UpdateManager.ReleaseInfo) = viewModelScope.launch {
+        val state = UpdateManager.download(getApplication(), release)
+        if (state is UpdateManager.State.ReadyToInstall) {
+            val app = getApplication<Application>()
+            if (UpdateManager.canInstall(app)) UpdateManager.install(app, state.file)
+        }
+    }
+
+    fun installUpdate(context: android.content.Context, state: UpdateManager.State.ReadyToInstall) {
+        if (UpdateManager.canInstall(context)) {
+            UpdateManager.install(context, state.file)
+        } else {
+            UpdateManager.requestInstallPermission(context)
         }
     }
 

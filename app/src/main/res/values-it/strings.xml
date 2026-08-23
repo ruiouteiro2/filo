@@ -46,7 +46,7 @@
     <string name="label_thoughts">I nostri pensieri</string>
     <string name="thoughts_yours_empty">Dì qualcosa.</string>
     <string name="thoughts_edit">Cambia umore e nota</string>
-    <string name="avatar_change_hint">Tocca la tua faccia per cambiare foto</string>
+    <string name="avatar_change_hint">Tocca una foto per vederla. Tieni premuta la tua per cambiarla.</string>
     <string name="photo_set_yours">Metti la tua foto del giorno</string>
     <string name="photo_replace_yours">Cambia la tua foto del giorno</string>
 
@@ -265,4 +265,17 @@
     <string name="onboarding_always_body">Senza questo la tua posizione si aggiorna solo con l\u2019app aperta. Con questo può vedere dove sei in qualsiasi momento. Consuma più batteria e resta una notifica fissa mentre è attivo.</string>
     <string name="onboarding_music_title">Condividi cosa ascolti</string>
     <string name="onboarding_music_body">Filo può mostrargli cosa sta suonando sul tuo telefono, così può aprire lo stesso brano. Legge solo il lettore musicale, mai le tue notifiche.</string>
+    <string name="together_since">Dal %1$s</string>
+    <string name="label_music">Musica</string>
+    <string name="music_nothing_yet">Ancora niente</string>
+    <string name="update_title">Aggiornamenti</string>
+    <string name="update_check">Cerca aggiornamenti</string>
+    <string name="update_checking">Controllo…</string>
+    <string name="update_none">Sei aggiornato.</string>
+    <string name="update_available">La versione %1$s è pronta</string>
+    <string name="update_download">Scarica e installa</string>
+    <string name="update_downloading">Scaricamento…</string>
+    <string name="update_install">Installa</string>
+    <string name="update_failed">Non riesco a controllare adesso. Riprova tra un po\u2019.</string>
+    <string name="update_banner">Una nuova versione di Filo è pronta. Apri le impostazioni per installarla.</string>
 </resources>

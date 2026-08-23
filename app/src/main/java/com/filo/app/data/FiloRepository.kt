@@ -359,6 +359,12 @@ class FiloRepository(private val context: Context) {
         set("spotify_updated_at", Instant.now().toString())
     }
 
+    /** Playback stopped: keep what it was, just stop calling it live. */
+    suspend fun setNowPlayingStopped(): Boolean = updateMe {
+        set("spotify_is_playing", false)
+        set("spotify_updated_at", Instant.now().toString())
+    }
+
     /** Unlinking must also retract what was already shared. */
     suspend fun clearNowPlaying(): Boolean = updateMe {
         set("spotify_track_id", "")

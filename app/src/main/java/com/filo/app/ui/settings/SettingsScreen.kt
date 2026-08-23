@@ -44,6 +44,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.unit.sp
 import com.filo.app.core.prefs.PairingState
 import com.filo.app.nowplaying.NotificationAccess
+import com.filo.app.update.UpdateManager
 import com.filo.app.core.time.DayMath
 import com.filo.app.core.time.PgTime
 import com.filo.app.data.model.CoupleSnapshot
@@ -76,6 +77,10 @@ fun SettingsScreen(
     onSetLocale: (String) -> Unit,
     clock24h: Boolean,
     onSetClock24h: (Boolean) -> Unit,
+    updateState: UpdateManager.State,
+    onCheckUpdate: () -> Unit,
+    onDownloadUpdate: (UpdateManager.ReleaseInfo) -> Unit,
+    onInstallUpdate: (UpdateManager.State.ReadyToInstall) -> Unit,
     liveLocationEnabled: Boolean,
     onSetLiveLocation: (Boolean) -> Unit,
     spotifyConfigured: Boolean,
@@ -267,6 +272,47 @@ fun SettingsScreen(
                     runCatching { context.startActivity(intent) }
                 },
             )
+        }
+
+        FiloCard {
+            SectionLabel(stringResource(R.string.update_title))
+            Spacer(Modifier.height(8.dp))
+            Timestamp(stringResource(R.string.settings_version, com.filo.app.BuildConfig.VERSION_NAME))
+            Spacer(Modifier.height(10.dp))
+            when (updateState) {
+                is UpdateManager.State.Checking -> Timestamp(stringResource(R.string.update_checking))
+                is UpdateManager.State.UpToDate -> {
+                    Timestamp(stringResource(R.string.update_none))
+                    Spacer(Modifier.height(8.dp))
+                    FiloSecondaryButton(text = stringResource(R.string.update_check), onClick = onCheckUpdate)
+                }
+                is UpdateManager.State.Available -> {
+                    CardValue(stringResource(R.string.update_available, updateState.release.versionName))
+                    if (updateState.release.notes.isNotBlank()) {
+                        Spacer(Modifier.height(6.dp))
+                        Timestamp(updateState.release.notes.take(280))
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    FiloButton(
+                        text = stringResource(R.string.update_download),
+                        onClick = { onDownloadUpdate(updateState.release) },
+                    )
+                }
+                is UpdateManager.State.Downloading -> Timestamp(stringResource(R.string.update_downloading))
+                is UpdateManager.State.ReadyToInstall -> FiloButton(
+                    text = stringResource(R.string.update_install),
+                    onClick = { onInstallUpdate(updateState) },
+                )
+                is UpdateManager.State.Failed -> {
+                    Timestamp(stringResource(R.string.update_failed))
+                    Spacer(Modifier.height(8.dp))
+                    FiloSecondaryButton(text = stringResource(R.string.update_check), onClick = onCheckUpdate)
+                }
+                UpdateManager.State.Idle -> FiloSecondaryButton(
+                    text = stringResource(R.string.update_check),
+                    onClick = onCheckUpdate,
+                )
+            }
         }
 
         FiloCard {

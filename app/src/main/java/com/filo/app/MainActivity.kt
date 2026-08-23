@@ -76,6 +76,7 @@ private fun FiloRoot() {
     val liveLocationEnabled by vm.liveLocationEnabled.collectAsState()
     val spotifyConnected by vm.spotifyConnected.collectAsState()
     val onboardingDone by vm.onboardingDone.collectAsState()
+    val updateState by vm.updateState.collectAsState()
     val context = LocalContext.current
     val navController = rememberNavController()
 
@@ -131,6 +132,8 @@ private fun FiloRoot() {
                     onPickAvatar = vm::uploadAvatar,
                     onPickDailyPhoto = vm::uploadDailyPhoto,
                     onToggleBucket = vm::setBucketDone,
+                    updateAvailable = updateState is com.filo.app.update.UpdateManager.State.Available,
+                    onOpenSettingsForUpdate = { navController.navigate(Routes.Settings) },
                     onPing = vm::sendPing,
                     onRefresh = vm::refresh,
                 )
@@ -144,6 +147,10 @@ private fun FiloRoot() {
                     onSetLocale = vm::setLocale,
                     clock24h = clock24h,
                     onSetClock24h = vm::setClock24h,
+                    updateState = updateState,
+                    onCheckUpdate = { vm.checkForUpdate(force = true) },
+                    onDownloadUpdate = vm::downloadUpdate,
+                    onInstallUpdate = { st -> vm.installUpdate(context, st) },
                     liveLocationEnabled = liveLocationEnabled,
                     onSetLiveLocation = { on -> vm.setLiveLocationEnabled(context, on) },
                     spotifyConfigured = vm.spotifyConfigured,

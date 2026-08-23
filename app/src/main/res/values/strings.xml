@@ -46,7 +46,7 @@
     <string name="label_thoughts">Our thoughts</string>
     <string name="thoughts_yours_empty">Say something.</string>
     <string name="thoughts_edit">Change your mood and note</string>
-    <string name="avatar_change_hint">Tap your face to change your photo</string>
+    <string name="avatar_change_hint">Tap a photo to see it. Hold yours to change it.</string>
     <string name="photo_set_yours">Set your photo of the day</string>
     <string name="photo_replace_yours">Replace your photo of the day</string>
 
@@ -265,4 +265,17 @@
     <string name="onboarding_always_body">Without this, your position updates only while the app is open. With it, they can see where you are at any time. It uses more battery and there is a permanent notification while it runs.</string>
     <string name="onboarding_music_title">Share what you are playing</string>
     <string name="onboarding_music_body">Filo can show them what is playing on your phone, so they can open the same track. It reads only the music player, never your notifications.</string>
+    <string name="together_since">Since %1$s</string>
+    <string name="label_music">Music</string>
+    <string name="music_nothing_yet">Nothing yet</string>
+    <string name="update_title">App updates</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_none">You are up to date.</string>
+    <string name="update_available">Version %1$s is ready</string>
+    <string name="update_download">Download and install</string>
+    <string name="update_downloading">Downloading…</string>
+    <string name="update_install">Install</string>
+    <string name="update_failed">Could not check right now. Try again in a bit.</string>
+    <string name="update_banner">A new version of Filo is ready. Open Settings to install it.</string>
 </resources>

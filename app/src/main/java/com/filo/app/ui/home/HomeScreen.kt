@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -64,6 +67,8 @@ import com.filo.app.ui.components.FiloButton
 import com.filo.app.ui.components.FiloCard
 import com.filo.app.ui.components.FiloSecondaryButton
 import com.filo.app.ui.components.FiloTextField
+import com.filo.app.ui.components.FullImageDialog
+import com.filo.app.nowplaying.NotificationAccess
 import com.filo.app.spotify.SpotifyLink
 import com.filo.app.ui.components.MapPreview
 import com.filo.app.ui.components.OrbBackground
@@ -114,6 +119,8 @@ fun HomeScreen(
     onPickAvatar: (Uri) -> Unit,
     onPickDailyPhoto: (Uri) -> Unit,
     onToggleBucket: (String, Boolean) -> Unit,
+    updateAvailable: Boolean,
+    onOpenSettingsForUpdate: () -> Unit,
     onPing: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
@@ -121,6 +128,15 @@ fun HomeScreen(
     val now = rememberTick()
     val partner = snapshot.partner
     val me = snapshot.me
+
+    // Shared between the US card's edit icon and the composer card below it.
+    var composing by remember { mutableStateOf(false) }
+
+    // Which photo is being looked at full screen, if any.
+    var viewing by remember { mutableStateOf<Pair<String, String?>?>(null) }
+    viewing?.let { (url, name) ->
+        FullImageDialog(url = url, name = name, onDismiss = { viewing = null })
+    }
 
     LaunchedEffect(Unit) { onRefresh() }
 
@@ -150,12 +166,38 @@ fun HomeScreen(
                 Text(stringResource(R.string.state_offline), style = FiloType.Timestamp, color = Ash)
             }
 
+            if (updateAvailable) {
+                FiloCard(onClick = onOpenSettingsForUpdate) {
+                    Text(
+                        text = stringResource(R.string.update_banner),
+                        style = FiloType.Body,
+                        color = Crimson,
+                    )
+                }
+            }
+
             StaggeredEntrance(index = 0) {
-                UsCard(me = me, partner = partner, now = now, photoUrls = photoUrls, clock24h = clock24h, onPickAvatar = onPickAvatar)
+                UsCard(
+                    me = me,
+                    partner = partner,
+                    now = now,
+                    photoUrls = photoUrls,
+                    clock24h = clock24h,
+                    onPickAvatar = onPickAvatar,
+                    onEdit = { composing = true },
+                    onViewImage = { url, name -> viewing = url to name },
+                )
             }
 
             StaggeredEntrance(index = 1) {
-                ThoughtsCard(me = me, partner = partner, onSetMood = onSetMood, onSetNote = onSetNote)
+                ThoughtsCard(
+                    me = me,
+                    partner = partner,
+                    editing = composing,
+                    onEditingChange = { composing = it },
+                    onSetMood = onSetMood,
+                    onSetNote = onSetNote,
+                )
             }
 
             StaggeredEntrance(index = 2) {
@@ -169,14 +211,17 @@ fun HomeScreen(
                 }
             }
 
-            StaggeredEntrance(index = 4) { DistanceCard(distance = distance, me = me, partner = partner) }
+            StaggeredEntrance(index = 4) { DaysTogetherCard(snapshot = snapshot) }
 
-            StaggeredEntrance(index = 5) {
-                NowPlayingCard(partner = partner, me = me)
-            }
+            StaggeredEntrance(index = 5) { DistanceCard(distance = distance, me = me, partner = partner) }
 
             StaggeredEntrance(index = 6) {
+                MusicCard(partner = partner, me = me)
+            }
+
+            StaggeredEntrance(index = 7) {
                 PhotoCard(
+                    onViewImage = { url, name -> viewing = url to name },
                     partner = partner,
                     me = me,
                     photoUrls = photoUrls,
@@ -184,7 +229,7 @@ fun HomeScreen(
                 )
             }
 
-            StaggeredEntrance(index = 7) {
+            StaggeredEntrance(index = 8) {
                 BucketCard(
                     items = snapshot.bucket,
                     onToggle = onToggleBucket,
@@ -192,7 +237,7 @@ fun HomeScreen(
                 )
             }
 
-            StaggeredEntrance(index = 8) { PingCard(onPing = onPing) }
+            StaggeredEntrance(index = 9) { PingCard(onPing = onPing) }
 
             Spacer(Modifier.height(24.dp))
         }
@@ -211,6 +256,8 @@ private fun UsCard(
     photoUrls: Map<String, String>,
     clock24h: Boolean,
     onPickAvatar: (Uri) -> Unit,
+    onEdit: () -> Unit,
+    onViewImage: (String, String?) -> Unit,
 ) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let(onPickAvatar)
@@ -219,8 +266,25 @@ private fun UsCard(
     val myNote = me?.noteText?.takeIf { it.isNotBlank() }
 
     FiloCard {
-        SectionLabel(stringResource(R.string.label_us))
-        Spacer(Modifier.height(18.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SectionLabel(stringResource(R.string.label_us))
+            // The one edit affordance for everything in this card: mood, message, note.
+            Image(
+                painter = painterResource(R.drawable.ic_edit),
+                contentDescription = stringResource(R.string.thoughts_edit),
+                colorFilter = ColorFilter.tint(Blood),
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .clickable { onEdit() }
+                    .padding(7.dp),
+            )
+        }
+        Spacer(Modifier.height(10.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -233,6 +297,7 @@ private fun UsCard(
                 clock24h = clock24h,
                 placeholder = stringResource(R.string.state_waiting_for_partner),
                 modifier = Modifier.weight(1f),
+                onTap = { url -> onViewImage(url, partner?.displayName) },
             )
             FaceColumn(
                 member = me,
@@ -241,7 +306,8 @@ private fun UsCard(
                 clock24h = clock24h,
                 placeholder = stringResource(R.string.state_no_data),
                 modifier = Modifier.weight(1f),
-                onAvatarClick = {
+                onTap = { url -> onViewImage(url, me?.displayName) },
+                onHold = {
                     picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 },
             )
@@ -289,7 +355,8 @@ private fun FaceColumn(
     clock24h: Boolean,
     placeholder: String,
     modifier: Modifier = Modifier,
-    onAvatarClick: (() -> Unit)? = null,
+    onTap: ((String) -> Unit)? = null,
+    onHold: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -307,15 +374,19 @@ private fun FaceColumn(
             PgTime.localTime(member.sleepEnd),
         )
         val emoji = member.moodEmoji?.takeIf { it.isNotBlank() }
+        val photoUrl = photoUrls[member.photoUrl]
 
-        // Just the face and their mood. The ring that used to sit around this had to be
-        // explained to be read, which is the same as not working.
+        // Tap looks, hold changes. Holding a face that is not yours does nothing, which is
+        // the correct amount of power over somebody else's picture.
         Box(contentAlignment = Alignment.BottomEnd) {
             Avatar(
                 displayName = member.displayName,
-                photoUrl = photoUrls[member.photoUrl],
+                photoUrl = photoUrl,
                 size = 96.dp,
-                modifier = if (onAvatarClick != null) Modifier.clickable { onAvatarClick() } else Modifier,
+                modifier = Modifier.combinedClickable(
+                    onClick = { if (photoUrl != null && onTap != null) onTap(photoUrl) },
+                    onLongClick = onHold,
+                ),
             )
             if (emoji != null) {
                 MoodBadge(emoji)
@@ -362,28 +433,41 @@ private val MoodPresets = listOf("\uD83D\uDE0A", "\uD83E\uDD70", "\uD83D\uDE34",
 
 /**
  * My composer, and only mine. What the two of us are feeling is shown above in US; this card
- * is purely the write surface, which is why it sits directly under the thing it writes into.
+ * is purely the write surface. Its editing state lives in the screen so the pencil on the US
+ * card can open it too.
  *
- * The eight presets are shortcuts, not a menu: the field beside them takes any emoji at all
- * from the system keyboard, so nobody is limited to a list somebody else chose.
+ * The eight presets are shortcuts, not a menu: the + at the end opens the full editor, where
+ * any emoji from the keyboard works.
  */
 @Composable
 private fun ThoughtsCard(
     me: Member?,
     partner: Member?,
+    editing: Boolean,
+    onEditingChange: (Boolean) -> Unit,
     onSetMood: (String?, String?) -> Unit,
     onSetNote: (String) -> Unit,
 ) {
-    var editing by remember { mutableStateOf(false) }
     var noteDraft by remember(me?.noteText) { mutableStateOf(me?.noteText.orEmpty()) }
     var moodDraft by remember(me?.moodText) { mutableStateOf(me?.moodText.orEmpty()) }
     var emojiDraft by remember(me?.moodEmoji) { mutableStateOf(me?.moodEmoji.orEmpty()) }
+
+    // "The message" is what people actually come here to write, so it takes the keyboard the
+    // moment the editor opens instead of making them find it.
+    val noteFocus = remember { FocusRequester() }
+    LaunchedEffect(editing) {
+        if (editing) {
+            // The field has to exist before it can take focus; one frame is enough.
+            kotlinx.coroutines.delay(80)
+            runCatching { noteFocus.requestFocus() }
+        }
+    }
 
     FiloCard {
         SectionLabel(stringResource(R.string.label_you))
         Spacer(Modifier.height(12.dp))
 
-        // The fast path: most changes are one tap on a face.
+        // The fast path: one tap sets the mood, the + opens everything else.
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             MoodPresets.forEach { preset ->
                 val selected = me?.moodEmoji == preset
@@ -400,17 +484,34 @@ private fun ThoughtsCard(
                     Text(text = preset, fontSize = if (selected) 22.sp else 19.sp)
                 }
             }
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .background(Blood.copy(alpha = 0.25f), CircleShape)
+                    .border(1.dp, Blood.copy(alpha = 0.6f), CircleShape)
+                    .clickable { onEditingChange(true) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_plus),
+                    contentDescription = stringResource(R.string.thoughts_edit),
+                    colorFilter = ColorFilter.tint(Crimson),
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
 
-        Spacer(Modifier.height(14.dp))
-        if (!editing) {
-            Text(
-                text = stringResource(R.string.thoughts_edit),
-                style = FiloType.Label,
-                color = Blood,
-                modifier = Modifier.clickable { editing = true },
+        if (editing) {
+            Spacer(Modifier.height(14.dp))
+            FiloTextField(
+                value = noteDraft,
+                onValueChange = { noteDraft = it.take(140) },
+                label = stringResource(R.string.note_hint),
+                singleLine = false,
+                modifier = Modifier.focusRequester(noteFocus),
             )
-        } else {
+            Timestamp(stringResource(R.string.note_counter, noteDraft.length, 140))
+            Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.width(110.dp)) {
                     FiloTextField(
@@ -433,27 +534,19 @@ private fun ThoughtsCard(
             Spacer(Modifier.height(4.dp))
             Timestamp(stringResource(R.string.mood_emoji_any))
             Spacer(Modifier.height(10.dp))
-            FiloTextField(
-                value = noteDraft,
-                onValueChange = { noteDraft = it.take(140) },
-                label = stringResource(R.string.note_hint),
-                singleLine = false,
-            )
-            Timestamp(stringResource(R.string.note_counter, noteDraft.length, 140))
-            Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FiloButton(
                     text = stringResource(R.string.save),
                     onClick = {
                         onSetMood(emojiDraft.trim().ifBlank { null }, moodDraft)
                         onSetNote(noteDraft)
-                        editing = false
+                        onEditingChange(false)
                     },
                     modifier = Modifier.weight(1f),
                 )
                 FiloSecondaryButton(
                     text = stringResource(R.string.cancel),
-                    onClick = { editing = false },
+                    onClick = { onEditingChange(false) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -461,8 +554,31 @@ private fun ThoughtsCard(
     }
 }
 
+/** How long you have been each other's, front and centre rather than a footnote. */
+@Composable
+private fun DaysTogetherCard(snapshot: CoupleSnapshot) {
+    val since = PgTime.localDate(snapshot.couple?.sinceDate) ?: return
+    val days = DayMath.daysBetween(since, LocalDate.now(ZoneId.systemDefault()))
+    FiloCard {
+        SectionLabel(stringResource(R.string.label_together))
+        Spacer(Modifier.height(6.dp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(DayMath.number(days), style = FiloType.Numeral, color = Crimson)
+            Spacer(Modifier.width(10.dp))
+            Text(
+                stringResource(R.string.countdown_days),
+                style = FiloType.Value,
+                color = Ash,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+        }
+        Timestamp(stringResource(R.string.together_since, DayMath.formatDate(since)))
+    }
+}
+
 @Composable
 private fun PhotoCard(
+    onViewImage: (String, String?) -> Unit,
     partner: Member?,
     me: Member?,
     photoUrls: Map<String, String>,
@@ -485,7 +601,17 @@ private fun PhotoCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)),
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                    // Tap looks at it properly; holding it swaps YOURS, because that is the
+                    // only photo here you have any business replacing.
+                    .combinedClickable(
+                        onClick = { onViewImage(theirPhoto, partner?.displayName) },
+                        onLongClick = {
+                            picker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                            )
+                        },
+                    ),
             )
             DayMath.relative(PgTime.instant(partner?.dailyPhotoAt))?.let {
                 Spacer(Modifier.height(6.dp))
@@ -504,7 +630,8 @@ private fun PhotoCard(
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp)),
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                        .clickable { onViewImage(minePhoto, null) },
                 )
                 Spacer(Modifier.width(12.dp))
             }
@@ -522,13 +649,6 @@ private fun PhotoCard(
     }
 }
 
-/**
- * What they are playing right now, and a way to hear it too.
- *
- * Tapping deep links into your own Spotify rather than driving their playback through the
- * Web API: the API route is Premium only and needs an already-active device, so it would
- * fail for exactly the person most likely to tap. A deep link just works.
- */
 /**
  * The bucket list as an actual list, not a score. Three open items are tickable right here,
  * because the whole point of a shared list is that ticking something off is one tap from
@@ -629,65 +749,113 @@ private fun HomeCheckCircle() {
     }
 }
 
+/**
+ * Music is a fixture, not a card that appears when the stars align. Both of you, whatever
+ * you are playing or last played, always in the same place. Tapping a track opens it in your
+ * own Spotify: exact link when the phone gave us an id, a search when it did not - Premium is
+ * never involved either way.
+ */
 @Composable
-private fun NowPlayingCard(partner: Member?, me: Member?) {
+private fun MusicCard(partner: Member?, me: Member?) {
     val context = LocalContext.current
-    // Shown whenever there is something to show. Which source filled it in - the phone's own
-    // media session or the Spotify API - is not the card's business.
-    if (partner == null || !partner.hasNowPlaying) return
+    val listenerOn = remember { NotificationAccess.isGranted(context) }
 
-    FiloCard(
-        onClick = {
-            val id = partner.spotifyTrackId?.takeIf { it.isNotBlank() }
-            if (id != null) {
-                SpotifyLink.openTrack(context, id)
-            } else {
-                // No exact id from the media session, so search for it instead. One extra
-                // tap, and it still lands on the track.
-                SpotifyLink.openSearch(
-                    context,
-                    partner.spotifyTrackName.orEmpty(),
-                    partner.spotifyArtist.orEmpty(),
-                )
-            }
-        },
-    ) {
-        SectionLabel(stringResource(R.string.spotify_label))
+    FiloCard {
+        SectionLabel(stringResource(R.string.label_music))
         Spacer(Modifier.height(12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            partner.spotifyArtUrl?.takeIf { it.isNotBlank() }?.let { art ->
-                coil.compose.AsyncImage(
-                    model = art,
-                    contentDescription = null,
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp)),
-                )
-                Spacer(Modifier.width(14.dp))
+
+        MusicRow(member = partner, isMine = false)
+        Spacer(Modifier.height(12.dp))
+        HorizontalDivider(color = Blood.copy(alpha = 0.14f))
+        Spacer(Modifier.height(12.dp))
+        MusicRow(member = me, isMine = true)
+
+        if (!listenerOn) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.now_playing_enable),
+                style = FiloType.Label,
+                color = Blood,
+                modifier = Modifier.clickable { NotificationAccess.openSettings(context) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun MusicRow(member: Member?, isMine: Boolean) {
+    val context = LocalContext.current
+    val name = member?.displayName ?: stringResource(R.string.state_waiting_for_partner)
+    val track = member?.spotifyTrackName?.takeIf { it.isNotBlank() }
+    val playing = member?.spotifyIsPlaying == true
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = track != null) {
+                val id = member?.spotifyTrackId?.takeIf { it.isNotBlank() }
+                if (id != null) {
+                    SpotifyLink.openTrack(context, id)
+                } else if (member != null) {
+                    SpotifyLink.openSearch(context, member.spotifyTrackName.orEmpty(), member.spotifyArtist.orEmpty())
+                }
+            },
+    ) {
+        val art = member?.spotifyArtUrl?.takeIf { it.isNotBlank() }
+        if (art != null && track != null) {
+            coil.compose.AsyncImage(
+                model = art,
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier.size(48.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(Ink, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                    .border(1.dp, Blood.copy(alpha = 0.35f), androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center,
+            ) { Text("\u266A", style = FiloType.Value, color = Ash) }
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(name, style = FiloType.Label, color = Ash)
+                if (playing) {
+                    Spacer(Modifier.width(6.dp))
+                    Text("\u25CF", fontSize = 9.sp, color = Crimson)
+                }
             }
-            Column(modifier = Modifier.weight(1f)) {
+            if (track == null) {
+                Text(stringResource(R.string.music_nothing_yet), style = FiloType.Body, color = Ash)
+            } else {
                 Text(
-                    text = partner.spotifyTrackName.orEmpty(),
+                    text = track,
                     style = FiloType.Value,
                     color = Bone,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = partner.spotifyArtist.orEmpty(),
-                    style = FiloType.Body,
-                    color = Ash,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = member.spotifyArtist.orEmpty(),
+                        style = FiloType.Body,
+                        color = Ash,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (!playing) {
+                        DayMath.relative(PgTime.instant(member.spotifyUpdatedAt))?.let {
+                            Spacer(Modifier.width(8.dp))
+                            Timestamp(it.toString())
+                        }
+                    }
+                }
             }
         }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = stringResource(R.string.spotify_play_this),
-            style = FiloType.Label,
-            color = Crimson,
-        )
-        DayMath.relative(PgTime.instant(partner.spotifyUpdatedAt))?.let { Timestamp(it.toString()) }
     }
 }
 
@@ -883,16 +1051,6 @@ private fun CountdownCard(
                 )
                 Timestamp(DayMath.formatDate(date))
             }
-        }
-        val since = PgTime.localDate(snapshot.couple?.sinceDate)
-        if (since != null) {
-            Spacer(Modifier.height(12.dp))
-            Timestamp(
-                stringResource(
-                    R.string.days_together,
-                    DayMath.number(DayMath.daysBetween(since, LocalDate.now(ZoneId.systemDefault()))),
-                ),
-            )
         }
     }
 }

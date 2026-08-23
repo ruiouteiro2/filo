@@ -122,7 +122,9 @@ class NowPlayingListenerService : NotificationListenerService() {
             if (current == lastPublished) return@launch
             lastPublished = current
             if (current == null) {
-                repository.clearNowPlaying()
+                // Keep the track and mark it stopped: "last played, 20 min ago" is worth
+                // far more to the other person than a blank card.
+                repository.setNowPlayingStopped()
             } else {
                 repository.publishLocalNowPlaying(
                     trackId = current.trackId,
