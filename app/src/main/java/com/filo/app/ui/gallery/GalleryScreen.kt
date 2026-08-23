@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.filo.app.ui.components.Avatar
 import com.filo.app.ui.components.CardValue
-import com.filo.app.ui.components.PresenceRing
 import com.filo.app.ui.components.FiloCard
 import com.filo.app.ui.components.SectionLabel
 import com.filo.app.ui.components.StaggeredEntrance
@@ -29,8 +28,6 @@ import com.filo.app.ui.theme.FiloType
 import com.filo.app.ui.theme.Blood
 import com.filo.app.ui.theme.Ink
 import com.filo.app.ui.theme.Bone
-import com.filo.app.core.time.DayState
-import java.time.Duration
 import java.time.LocalTime
 
 /**
@@ -51,24 +48,15 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
 
         StaggeredEntrance(index = 0) {
             FiloCard {
-                SectionLabel("Presence ring")
+                SectionLabel("Faces")
                 Spacer(Modifier.height(16.dp))
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    PresenceRing(
-                        state = DayState.Awake(LocalTime.of(23, 30), Duration.ofHours(6)),
-                        diameter = 104.dp,
-                        badge = { Text("\uD83E\uDD70", fontSize = 15.sp) },
-                    ) { Avatar("Rui", null, size = 68.dp) }
-                    PresenceRing(
-                        state = DayState.Asleep(LocalTime.of(7, 15), Duration.ofHours(4)),
-                        diameter = 104.dp,
-                    ) { Avatar("Ada", null, size = 68.dp) }
-                    PresenceRing(state = DayState.Unknown, diameter = 104.dp) {
-                        Avatar(null, null, size = 68.dp)
-                    }
+                    Avatar("Rui", null, size = 84.dp)
+                    Avatar("Ada", null, size = 84.dp)
+                    Avatar(null, null, size = 84.dp)
                 }
             }
         }

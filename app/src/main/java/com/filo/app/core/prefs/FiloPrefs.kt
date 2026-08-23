@@ -27,6 +27,7 @@ object PrefKeys {
     val DisplayName = stringPreferencesKey("display_name")
     val Locale = stringPreferencesKey("locale")
     val WidgetSnapshot = stringPreferencesKey("widget_snapshot")
+    val OnboardingDone = booleanPreferencesKey("onboarding_done")
     val AskedLocation = booleanPreferencesKey("asked_location")
     val AskedNotifications = booleanPreferencesKey("asked_notifications")
     val LastPingAt = longPreferencesKey("last_ping_at")
@@ -103,6 +104,13 @@ class FiloPrefs(private val context: Context) {
 
     val askedLocation: Flow<Boolean> = context.filoDataStore.data.map { it[PrefKeys.AskedLocation] ?: false }
     val askedNotifications: Flow<Boolean> = context.filoDataStore.data.map { it[PrefKeys.AskedNotifications] ?: false }
+
+    val onboardingDone: Flow<Boolean> =
+        context.filoDataStore.data.map { it[PrefKeys.OnboardingDone] ?: false }
+
+    suspend fun markOnboardingDone() {
+        context.filoDataStore.edit { it[PrefKeys.OnboardingDone] = true }
+    }
 
     suspend fun markAskedLocation() {
         context.filoDataStore.edit { it[PrefKeys.AskedLocation] = true }

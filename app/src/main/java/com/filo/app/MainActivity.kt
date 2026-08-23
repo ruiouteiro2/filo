@@ -12,7 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import com.filo.app.ui.permissions.PermissionRationaleDialog
+import com.filo.app.ui.onboarding.PermissionsOnboarding
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -75,6 +75,7 @@ private fun FiloRoot() {
     val clock24h by vm.clock24h.collectAsState()
     val liveLocationEnabled by vm.liveLocationEnabled.collectAsState()
     val spotifyConnected by vm.spotifyConnected.collectAsState()
+    val onboardingDone by vm.onboardingDone.collectAsState()
     val context = LocalContext.current
     val navController = rememberNavController()
 
@@ -93,8 +94,9 @@ private fun FiloRoot() {
             onDone = vm::finishPairing,
         )
 
-        Startup.Paired -> {
-            LaunchedEffect(Unit) { vm.evaluatePermissions(context) }
+        Startup.Paired -> if (!onboardingDone) {
+            PermissionsOnboarding(onDone = vm::finishOnboarding)
+        } else {
             // Live location lives exactly as long as this screen does.
             val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
             androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
@@ -110,9 +112,6 @@ private fun FiloRoot() {
                     lifecycleOwner.lifecycle.removeObserver(observer)
                     vm.stopLiveLocation()
                 }
-            }
-            pendingAsk?.let { ask ->
-                PermissionRationaleDialog(ask = ask, onResolved = { vm.onPermissionResolved(ask, context) })
             }
             NavHost(navController = navController, startDestination = Routes.Home) {
             composable(Routes.Home) {

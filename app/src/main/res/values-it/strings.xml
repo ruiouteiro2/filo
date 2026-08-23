@@ -251,4 +251,18 @@
     <string name="now_playing_on">Stai condividendo cosa ascolti</string>
     <string name="now_playing_restricted">Se l\'interruttore è grigio, Android lo blocca perché Filo è stato installato da un file. Nella schermata info app apri il menu a tre puntini e scegli "Consenti impostazioni con limitazioni", poi torna qui.</string>
     <string name="now_playing_app_info">Apri info app</string>
+    <string name="onboarding_optional">Facoltativo</string>
+    <string name="onboarding_allow">Consenti</string>
+    <string name="onboarding_skip">Salta per ora</string>
+    <string name="onboarding_not_now">Non ora</string>
+    <string name="onboarding_next">Avanti</string>
+    <string name="onboarding_granted">Consentito</string>
+    <string name="onboarding_notifications_title">Fatti raggiungere</string>
+    <string name="onboarding_notifications_body">Una notifica sola, mai altro: quando tocca il cuore per dirti che ti sta pensando. Nient\u2019altro in Filo ne manda.</string>
+    <string name="onboarding_location_title">Quanto siete distanti</string>
+    <string name="onboarding_location_body">Filo calcola la distanza tra voi e mostra la sua città su una mappa. La tua posizione la vede solo lui.</string>
+    <string name="onboarding_always_title">Condividila anche con Filo chiuso</string>
+    <string name="onboarding_always_body">Senza questo la tua posizione si aggiorna solo con l\u2019app aperta. Con questo può vedere dove sei in qualsiasi momento. Consuma più batteria e resta una notifica fissa mentre è attivo.</string>
+    <string name="onboarding_music_title">Condividi cosa ascolti</string>
+    <string name="onboarding_music_body">Filo può mostrargli cosa sta suonando sul tuo telefono, così può aprire lo stesso brano. Legge solo il lettore musicale, mai le tue notifiche.</string>
 </resources>

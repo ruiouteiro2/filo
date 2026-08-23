@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sits over the bottom of the photo. Dark enough to read on, sheer enough to see through. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#CC0A0709" />
+    <corners android:radius="16dp" />
+</shape>

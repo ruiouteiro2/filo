@@ -78,9 +78,11 @@ private fun WidgetShell(
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(Surface)
-                .cornerRadius(24.dp)
-                .padding(14.dp),
+                // A translucent drawable rather than a solid colour: the wallpaper shows
+                // through, and the drawable carries the rounded corners and the hairline that
+                // keep the shape readable on a light background.
+                .background(ImageProvider(R.drawable.widget_background))
+                .padding(16.dp),
             content = { content() },
         )
     }
@@ -278,8 +280,12 @@ private fun HeartContent(justSent: Boolean) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(if (justSent) Blood else Surface)
-                .cornerRadius(24.dp)
+                .background(
+                    ImageProvider(
+                        if (justSent) R.drawable.widget_background_sent
+                        else R.drawable.widget_background_heart,
+                    ),
+                )
                 .padding(8.dp)
                 // A callback, not an activity: the heart must not need the app to open.
                 .clickable(actionRunCallback<SendPingAction>()),
@@ -345,9 +351,8 @@ private fun PhotoContent(snapshot: WidgetSnapshot) {
                     Box(
                         modifier = GlanceModifier
                             .fillMaxWidth()
-                            .background(Ink)
-                            .cornerRadius(14.dp)
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                            .background(ImageProvider(R.drawable.widget_note_scrim))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                     ) {
                         Text(
                             text = note,

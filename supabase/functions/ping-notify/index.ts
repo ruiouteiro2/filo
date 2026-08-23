@@ -126,13 +126,28 @@ Deno.serve(async (request) => {
       return new Response(JSON.stringify({ skipped: "no_token" }), { status: 200 });
     }
 
-    const raw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+    // Base64 first. The raw JSON form contains ~28 real newlines inside private_key, which
+    // do not survive being interpolated through a shell into `supabase secrets set` - the
+    // symptom is a 500 here with "SyntaxError ... at position 1" and a heart that never
+    // arrives. Base64 has no characters a shell can mangle.
+    const encoded = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_B64");
+    const raw = encoded
+      ? new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0)))
+      : Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+
     if (!raw) {
       // Push is not configured yet. The ping is still recorded; it just does not notify.
-      console.log("FIREBASE_SERVICE_ACCOUNT not set, skipping send");
+      console.log("no Firebase credentials set, skipping send");
       return new Response(JSON.stringify({ skipped: "not_configured" }), { status: 200 });
     }
-    const serviceAccount = JSON.parse(raw);
+
+    let serviceAccount: Record<string, string>;
+    try {
+      serviceAccount = JSON.parse(raw);
+    } catch (error) {
+      console.error("Firebase credentials are not valid JSON", error);
+      return new Response(JSON.stringify({ error: "bad_credentials" }), { status: 500 });
+    }
     const token = await accessToken(serviceAccount);
 
     const message = {

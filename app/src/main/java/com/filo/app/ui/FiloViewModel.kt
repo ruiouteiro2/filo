@@ -85,6 +85,15 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
         .map { repo.distanceState() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, DistanceState.Missing)
 
+    /** Everything is asked once, in one flow, straight after pairing. */
+    val onboardingDone: StateFlow<Boolean> =
+        prefs.onboardingDone.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun finishOnboarding() = viewModelScope.launch {
+        prefs.markOnboardingDone()
+        refresh()
+    }
+
     private val _pendingAsk = MutableStateFlow<PermissionAsk?>(null)
     val pendingAsk: StateFlow<PermissionAsk?> = _pendingAsk.asStateFlow()
 
@@ -131,14 +140,12 @@ class FiloViewModel(app: Application) : AndroidViewModel(app) {
      * Asks for location first, then notifications, and only ever once each. A refusal is
      * remembered so the app never nags; settings has a way back in.
      */
+    /**
+     * Nothing to do any more: permissions are asked once in the onboarding flow rather than
+     * ambushing people from the home screen. Kept so settings can still send them back.
+     */
     fun evaluatePermissions(context: android.content.Context) = viewModelScope.launch {
-        val askedLocation = prefs.askedLocation.first()
-        val askedNotifications = prefs.askedNotifications.first()
-        _pendingAsk.value = when {
-            !hasLocationPermission(context) && !askedLocation -> PermissionAsk.Location
-            !hasNotificationPermission(context) && !askedNotifications -> PermissionAsk.Notifications
-            else -> null
-        }
+        _pendingAsk.value = null
     }
 
     fun onPermissionResolved(ask: PermissionAsk, context: android.content.Context) = viewModelScope.launch {

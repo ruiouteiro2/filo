@@ -251,4 +251,18 @@
     <string name="now_playing_on">Sharing what you play</string>
     <string name="now_playing_restricted">If the switch is greyed out, Android is blocking it because Filo was installed from a file. On the app info screen, open the three dot menu and choose "Allow restricted settings", then come back.</string>
     <string name="now_playing_app_info">Open app info</string>
+    <string name="onboarding_optional">Optional</string>
+    <string name="onboarding_allow">Allow</string>
+    <string name="onboarding_skip">Skip for now</string>
+    <string name="onboarding_not_now">Not now</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_granted">Allowed</string>
+    <string name="onboarding_notifications_title">Let them reach you</string>
+    <string name="onboarding_notifications_body">One notification, ever: when they tap the heart to say they are thinking of you. Nothing else in Filo sends one.</string>
+    <string name="onboarding_location_title">How far apart you are</string>
+    <string name="onboarding_location_body">Filo works out the distance between you and shows their town on a map. Your position is only ever seen by them.</string>
+    <string name="onboarding_always_title">Share it even when Filo is closed</string>
+    <string name="onboarding_always_body">Without this, your position updates only while the app is open. With it, they can see where you are at any time. It uses more battery and there is a permanent notification while it runs.</string>
+    <string name="onboarding_music_title">Share what you are playing</string>
+    <string name="onboarding_music_body">Filo can show them what is playing on your phone, so they can open the same track. It reads only the music player, never your notifications.</string>
 </resources>

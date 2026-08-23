@@ -198,7 +198,9 @@ class FiloRepository(private val context: Context) {
             }.decodeList<BucketItem>()
             _snapshot.value = CoupleSnapshot(me, partner, couple, countdowns, bucket)
             _online.value = true
-            if (_photoUrls.value.isEmpty()) scope.launch { refreshPhotoUrls() }
+            // Always, not just once: signed URLs expire, and a newly uploaded photo has
+            // no URL until this runs again.
+            scope.launch { refreshPhotoUrls() }
         }.onFailure {
             Log.w(TAG, "refresh failed", it)
             _online.value = false
@@ -372,6 +374,7 @@ class FiloRepository(private val context: Context) {
     // ------------------------------------------------------------- the couple
 
     suspend fun setSinceDate(date: LocalDate): Boolean = withContext(Dispatchers.IO) {
+        awaitAuthReady()
         val coupleId = _snapshot.value.couple?.id ?: return@withContext false
         runCatching {
             client.from("couples").update({ set("since_date", date.toString()) }) {
@@ -385,6 +388,7 @@ class FiloRepository(private val context: Context) {
 
     suspend fun addCountdown(labelEn: String, labelIt: String, date: LocalDate, emoji: String?, primary: Boolean): Boolean =
         withContext(Dispatchers.IO) {
+        awaitAuthReady()
             val coupleId = prefs.currentPairing().coupleId ?: return@withContext false
             runCatching {
                 if (primary) clearPrimaryFlag()
@@ -404,6 +408,7 @@ class FiloRepository(private val context: Context) {
 
     suspend fun updateCountdown(id: String, labelEn: String, labelIt: String, date: LocalDate, emoji: String?): Boolean =
         withContext(Dispatchers.IO) {
+        awaitAuthReady()
             runCatching {
                 client.from("countdowns").update({
                     set("label_en", labelEn)
@@ -416,6 +421,7 @@ class FiloRepository(private val context: Context) {
         }
 
     suspend fun setPrimaryCountdown(id: String): Boolean = withContext(Dispatchers.IO) {
+        awaitAuthReady()
         runCatching {
             clearPrimaryFlag()
             client.from("countdowns").update({ set("is_primary", true) }) { filter { eq("id", id) } }
@@ -431,6 +437,7 @@ class FiloRepository(private val context: Context) {
     }
 
     suspend fun deleteCountdown(id: String): Boolean = withContext(Dispatchers.IO) {
+        awaitAuthReady()
         runCatching {
             client.from("countdowns").delete { filter { eq("id", id) } }
             refresh()
@@ -440,6 +447,7 @@ class FiloRepository(private val context: Context) {
     // ----------------------------------------------------------- bucket list
 
     suspend fun addBucketItem(text: String): Boolean = withContext(Dispatchers.IO) {
+        awaitAuthReady()
         val pairing = prefs.currentPairing()
         val coupleId = pairing.coupleId ?: return@withContext false
         val uid = currentUserId() ?: return@withContext false
@@ -456,6 +464,7 @@ class FiloRepository(private val context: Context) {
     }
 
     suspend fun setBucketDone(id: String, done: Boolean): Boolean = withContext(Dispatchers.IO) {
+        awaitAuthReady()
         runCatching {
             client.from("bucket_items").update({
                 set("done", done)
@@ -466,6 +475,7 @@ class FiloRepository(private val context: Context) {
     }
 
     suspend fun deleteBucketItem(id: String): Boolean = withContext(Dispatchers.IO) {
+        awaitAuthReady()
         runCatching {
             client.from("bucket_items").delete { filter { eq("id", id) } }
             refresh()
@@ -523,7 +533,12 @@ class FiloRepository(private val context: Context) {
                 path to client.storage.from(PHOTO_BUCKET).createSignedUrl(path, SIGNED_URL_TTL)
             }.onFailure { Log.w(TAG, "signing $path failed", it) }.getOrNull()
         }.toMap()
-        _photoUrls.value = resolved
+        if (resolved.size != paths.size) {
+            Log.w(TAG, "signed ${resolved.size} of ${paths.size} photo paths")
+        }
+        // Merge rather than replace, so one transient failure does not blank a photo that
+        // was already on screen.
+        _photoUrls.value = _photoUrls.value + resolved
     }
 
     // ----------------------------------------------------------------- pings

@@ -60,7 +60,6 @@ import com.filo.app.data.weather.Weather
 import com.filo.app.data.weather.Wmo
 import com.filo.app.ui.components.Avatar
 import com.filo.app.ui.components.CardValue
-import com.filo.app.ui.components.PresenceRing
 import com.filo.app.ui.components.FiloButton
 import com.filo.app.ui.components.FiloCard
 import com.filo.app.ui.components.FiloSecondaryButton
@@ -295,9 +294,7 @@ private fun FaceColumn(
     val context = LocalContext.current
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         if (member == null) {
-            Box(modifier = Modifier.size(128.dp), contentAlignment = Alignment.Center) {
-                Avatar(null, null, size = 84.dp)
-            }
+            Avatar(null, null, size = 96.dp)
             Spacer(Modifier.height(10.dp))
             Text(placeholder, style = FiloType.Body, color = Ash, textAlign = TextAlign.Center)
             return@Column
@@ -311,22 +308,22 @@ private fun FaceColumn(
         )
         val emoji = member.moodEmoji?.takeIf { it.isNotBlank() }
 
-        PresenceRing(
-            state = state,
-            diameter = 128.dp,
-            badge = if (emoji == null) null else ({ MoodBadge(emoji) }),
-        ) {
+        // Just the face and their mood. The ring that used to sit around this had to be
+        // explained to be read, which is the same as not working.
+        Box(contentAlignment = Alignment.BottomEnd) {
             Avatar(
                 displayName = member.displayName,
                 photoUrl = photoUrls[member.photoUrl],
-                size = 84.dp,
+                size = 96.dp,
                 modifier = if (onAvatarClick != null) Modifier.clickable { onAvatarClick() } else Modifier,
             )
+            if (emoji != null) {
+                MoodBadge(emoji)
+            }
         }
         Spacer(Modifier.height(10.dp))
         Text(member.displayName, style = FiloType.Value, color = Bone)
         Text(DayMath.formatTime(now, zone, clock24h), style = FiloType.Mono, color = Crimson)
-        // The sentence, not the picture, is what actually answers "are they around".
         Text(
             text = DayStates.sentence(context, state, clock24h),
             style = FiloType.Timestamp,
@@ -347,7 +344,7 @@ private fun FaceColumn(
     }
 }
 
-/** The mood emoji, sitting on the ring where it reads as a property of the person. */
+/** The mood emoji, tucked onto the corner of the face it belongs to. */
 @Composable
 private fun MoodBadge(emoji: String) {
     Box(
